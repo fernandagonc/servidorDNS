@@ -26,13 +26,18 @@ void add(char* hostname, char *enderecoIP, TabelaDNS * DNS) {
 
     DNS->entradas[DNS->nroEntradas] = novaEntrada(hostname, enderecoIP);
     DNS->nroEntradas += 1;
+    
+    printf("Host e endereço associado adicionados com sucesso.\n");
 
+    // aumentar tamanho da tabela para próxima inserção
     void *tmp = realloc(DNS->entradas, (DNS->nroEntradas + 1) * sizeof(HostnameIP));
     if (tmp == NULL) {
         printf("Falha no realloc");
     } else {
         DNS->entradas = tmp;
     }
+
+
 }
 
 int posicaoHostNaTabela(char *hostname, TabelaDNS DNS){
@@ -55,7 +60,7 @@ int search(char *hostname, TabelaDNS DNS){
     }
     else{
         //TODO requisições para outros servidores
-        printf("Endereço associado ao host %s não encontrado. \n", DNS.entradas[posicao].hostname);
+        printf("Endereço associado ao host %s não encontrado. \n", hostname);
     }
 
     return 0;
