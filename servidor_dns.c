@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include "funcoes_servidor.h"
 #include "common.h"
 #include <ctype.h> 
 
@@ -14,23 +15,13 @@
 #define SIZE 1024
 //https://www.geeksforgeeks.org/udp-server-client-implementation-c/
 //https://sourcedaddy.com/networking/simple-dns-server.html
-int inicializarSocketAddr(const char *proto, const char *portstr, struct sockaddr_storage *storage);
+
 
 void usage() {
 	printf("Uso:<porta> [startup]\n");
 	printf("Exemplo de uso: 51511 inicializacao.txt\n");
 	exit(EXIT_FAILURE);
 }
-
-typedef struct HostnameIP{
-    char hostname[50];
-    char enderecoIP[32];
-} HostnameIP;
-
-typedef struct TabelaDNS {
-    int nroEntradas;
-    struct HostnameIP* entradas;
-} TabelaDNS;
 
 void printTabelaDNS(TabelaDNS DNS){
     int i=0;
@@ -39,61 +30,6 @@ void printTabelaDNS(TabelaDNS DNS){
     };
 
 };
-
-struct HostnameIP novaEntrada(char* hostname, char *enderecoIP){
-    HostnameIP novaEntrada;
-
-    memcpy(novaEntrada.hostname, hostname, 50);
-    memcpy(novaEntrada.enderecoIP, enderecoIP, 32);
-
-    return novaEntrada;
-}
-
-void *add(char* hostname, char *enderecoIP, TabelaDNS * DNS) {
-    int posicaoHost = posicaoHostNaTabela(hostname, *DNS);
-
-    if(posicaoHost > 0){ //host já existe na tabela, iremos atualizar os dados
-        DNS->entradas[posicaoHost] = novaEntrada(hostname, enderecoIP);
-        printf("As informações para o host informado foram atualizadas na tabela. \n");
-        return;
-    }
-
-    DNS->entradas[DNS->nroEntradas] = novaEntrada(hostname, enderecoIP);
-    DNS->nroEntradas += 1;
-
-    void *tmp = realloc(DNS->entradas, (DNS->nroEntradas + 1) * sizeof(HostnameIP));
-    if (tmp == NULL) {
-        printf("Falha no realloc");
-    } else {
-        DNS->entradas = tmp;
-    }
-}
-
-int posicaoHostNaTabela(char *hostname, TabelaDNS DNS){
-    int comparacao; 
-
-    for(int i = 0; i < DNS.nroEntradas; i++){
-        comparacao = strcmp(hostname, DNS.entradas[i].hostname);
-        if(comparacao == 0){
-            return i;
-        }
-    }
-    return -1;
-}
-
-int *search(char *hostname, TabelaDNS DNS){
-    int posicao = posicaoHostNaTabela(hostname, DNS);
-    if(posicao > 0){
-        printf("Endereço associado ao host %s: %s \n", DNS.entradas[posicao].hostname, DNS.entradas[posicao].enderecoIP);
-        return 1;
-    }
-    else{
-        printf("Endereço associado ao Host não encontrado. \n");
-    }
-
-    return 0;
-
-}
 
 int main(int argc, char *argv[]){
 
@@ -145,10 +81,13 @@ int main(int argc, char *argv[]){
 
     printTabelaDNS(DNS);
 
-    print("\n");
+    printf("\n");
     search("host2", DNS);
+    search("host5", DNS);
     add("host3","155.155.0.0", &DNS);
-    print("\n");
+    add("host4","111.111.111.111", &DNS);
+
+    printf("\n");
     
     printTabelaDNS(DNS);
 
@@ -179,31 +118,4 @@ int main(int argc, char *argv[]){
     close(sockfd);
     free(resposta);
     return 1;
-};
-
-
-int inicializarSocketAddr(const char *proto, const char *portstr, struct sockaddr_storage *storage) {
-   
-    uint16_t port = (uint16_t)atoi(portstr); 
-    if (port == 0) {
-        return -1;
-    }
-    port = htons(port); 
-
-    memset(storage, 0, sizeof(*storage));
-    if (0 == strcmp(proto, "v4")) {
-        struct sockaddr_in *addr4 = (struct sockaddr_in *)storage;
-        addr4->sin_family = AF_INET;
-        addr4->sin_addr.s_addr = INADDR_ANY;
-        addr4->sin_port = port;
-        return 0;
-    } else if (0 == strcmp(proto, "v6")) {
-        struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)storage;
-        addr6->sin6_family = AF_INET6;
-        addr6->sin6_addr = in6addr_any;
-        addr6->sin6_port = port;
-        return 0;
-    } else {
-        return -1;
-    }
 };
