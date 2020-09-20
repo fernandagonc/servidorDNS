@@ -30,14 +30,60 @@ void printTabelaDNS(TabelaDNS DNS){
     };
 
 };
+void chamarComando (char * comando, TabelaDNS *DNS){
+    int j=0, ctr =0;
+    char parametros[3][100]; 
+
+    for(int i=0; i <= (strlen(comando));i++){
+ 
+         if(comando[i]==' '||comando[i]=='\0'){
+            parametros[ctr][j]='\0';
+            ctr++;  //for next word
+            j = 0;    //for next word, init index to 0
+        }
+        else{
+            parametros[ctr][j] = comando[i];
+            j++;
+        }
+    }
+
+    int comparacao = strcmp(parametros[0], "add");
+
+    if(comparacao == 0){
+        printf("add %s %s\n", parametros[1], parametros[2] );
+        add(parametros[1], parametros[2], DNS);
+        return;
+    }
+    
+    comparacao = strcmp(parametros[0], "search");
+    if(comparacao == 0){
+        printf("search %s \n", parametros[1]);
+        search(parametros[1], *DNS);
+        return;
+    }
+    
+    comparacao = strcmp(parametros[0], "link");
+    if(comparacao == 0){
+        printf("link \n");
+        return;
+    }
+    else{
+        printf("Comando inválido \n");
+        return;
+    }
+};
 
 int main(int argc, char *argv[]){
 
 	if (argc < 2) {
         usage();
     }
-
-    else if(argc == 3){
+    
+    TabelaDNS DNS;
+    DNS.nroEntradas = 0;
+    DNS.entradas = malloc(1 * sizeof(HostnameIP));
+    
+    if(argc == 3){
         //abrir arquivo
         FILE *file = fopen(argv[2],"r");
         char linha[1024];  
@@ -46,8 +92,11 @@ int main(int argc, char *argv[]){
         }
         else{
             while(fgets(linha, 1024, file)) {
-
-            }         
+                linha[strcspn(linha, "\n")] = 0;
+                chamarComando(linha, &DNS);
+                printTabelaDNS(DNS);
+                printf("\n");
+            }       
 
         }
     }
@@ -58,7 +107,7 @@ int main(int argc, char *argv[]){
     }
 
 	int sockfd;
-    sockfd = socket(storage.ss_family, SOCK_STREAM, 0);
+    sockfd = socket(storage.ss_family, SOCK_DGRAM, 0);
     
 	if((sockfd) < 0){
         printf("\n Erro : Não foi possível criar o socket \n");
@@ -71,51 +120,38 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
-    TabelaDNS DNS;
-    DNS.nroEntradas = 0;
-    DNS.entradas = malloc(1 * sizeof(HostnameIP));
 
-    add("host1", "192.240.168.0", &DNS);
-    add("host2", "192.255.168.1", &DNS);
-    add("host3", "192.255.0.0", &DNS);
-
-    printTabelaDNS(DNS);
-
-    printf("\n");
-    search("host2", DNS);
-    search("host5", DNS);
-    add("host3","155.155.0.0", &DNS);
-    add("host4","111.111.111.111", &DNS);
-
-    printf("\n");
+    while(1){
+        printf("\nComando> ");
+	    char comando[50];
+	    if(fgets(comando, 50, stdin)){
+            comando[strcspn(comando, "\n")] = 0;
+            chamarComando(comando, &DNS);
+        }
+    }
     
-    printTabelaDNS(DNS);
-
-
     char buf[BUFSZ];
     char *resposta = "hello";
     size_t count;
     int n, len;
     
-    while (1){
-           
-        memset(buf, 0, BUFSZ);
-
-        // int clientfd;
-        // struct sockaddr_storage client_storage;
-        // struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
-        // socklen_t client_addrlen = sizeof(client_storage);
-
-        // n = recvfrom(sockfd, (char *)buf, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &client_addr, &len); 
-        // buf[n] = '\0'; 
-        // printf("Client : %s\n", buf); 
-        
-        // sendto(sockfd, (const char *)resposta, strlen(resposta),  MSG_CONFIRM, (const struct sockaddr *) &client_addr, len);
-
-
-    }
     
-    close(sockfd);
-    free(resposta);
+    memset(buf, 0, BUFSZ);
+
+    int clientfd;
+    struct sockaddr_storage client_storage;
+    struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
+    socklen_t client_addrlen = sizeof(client_storage);
+
+    // n = recvfrom(sockfd, (char *)buf, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &client_addr, &client_addrlen); 
+    n = recv(sockfd, (char *)buf, ( struct sockaddr *) &client_addr, &client_addrlen); 
+    buf[n] = '\0'; 
+    printf("Client : %s\n", buf); 
+    
+    // sendto(sockfd, (const char *)resposta, strlen(resposta),  MSG_CONFIRM, (const struct sockaddr *) &client_addr, client_addrlen);
+    send(sockfd, (const char *)resposta, strlen(resposta), 0);
+
+    
+    // close(sockfd);
     return 1;
 };
