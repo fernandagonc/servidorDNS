@@ -35,7 +35,7 @@ typedef struct TabelaDNS {
 void printTabelaDNS(TabelaDNS DNS){
     int i=0;
     for (i = 0; i < DNS.nroEntradas; i++){
-        printf("Host: %s IP: %s \n", DNS.entradas[i].hostname, DNS.entradas[i].hostname);
+        printf("Host: %s IP: %s \n", DNS.entradas[i].hostname, DNS.entradas[i].enderecoIP);
     };
 
 };
@@ -43,21 +43,56 @@ void printTabelaDNS(TabelaDNS DNS){
 struct HostnameIP novaEntrada(char* hostname, char *enderecoIP){
     HostnameIP novaEntrada;
 
-    strncpy(novaEntrada.hostname, hostname, sizeof(hostname));
-    strncpy(novaEntrada.enderecoIP, enderecoIP, sizeof(enderecoIP));
+    memcpy(novaEntrada.hostname, hostname, 50);
+    memcpy(novaEntrada.enderecoIP, enderecoIP, 32);
 
     return novaEntrada;
 }
 
 void *add(char* hostname, char *enderecoIP, TabelaDNS * DNS) {
-    char* iterator;
+    int posicaoHost = posicaoHostNaTabela(hostname, *DNS);
+
+    if(posicaoHost > 0){ //host já existe na tabela, iremos atualizar os dados
+        DNS->entradas[posicaoHost] = novaEntrada(hostname, enderecoIP);
+        printf("As informações para o host informado foram atualizadas na tabela. \n");
+        return;
+    }
 
     DNS->entradas[DNS->nroEntradas] = novaEntrada(hostname, enderecoIP);
     DNS->nroEntradas += 1;
 
-    void *tmp = realloc(DNS->entradas, sizeof(DNS) + sizeof(DNS->entradas[0]));
+    void *tmp = realloc(DNS->entradas, (DNS->nroEntradas + 1) * sizeof(HostnameIP));
+    if (tmp == NULL) {
+        printf("Falha no realloc");
+    } else {
+        DNS->entradas = tmp;
+    }
+}
 
-    return;        
+int posicaoHostNaTabela(char *hostname, TabelaDNS DNS){
+    int comparacao; 
+
+    for(int i = 0; i < DNS.nroEntradas; i++){
+        comparacao = strcmp(hostname, DNS.entradas[i].hostname);
+        if(comparacao == 0){
+            return i;
+        }
+    }
+    return -1;
+}
+
+int *search(char *hostname, TabelaDNS DNS){
+    int posicao = posicaoHostNaTabela(hostname, DNS);
+    if(posicao > 0){
+        printf("Endereço associado ao host %s: %s \n", DNS.entradas[posicao].hostname, DNS.entradas[posicao].enderecoIP);
+        return 1;
+    }
+    else{
+        printf("Endereço associado ao Host não encontrado. \n");
+    }
+
+    return 0;
+
 }
 
 int main(int argc, char *argv[]){
@@ -65,7 +100,8 @@ int main(int argc, char *argv[]){
 	if (argc < 2) {
         usage();
     }
-    else if(argv == 3){
+
+    else if(argc == 3){
         //abrir arquivo
         FILE *file = fopen(argv[2],"r");
         char linha[1024];  
@@ -104,7 +140,18 @@ int main(int argc, char *argv[]){
     DNS.entradas = malloc(1 * sizeof(HostnameIP));
 
     add("host1", "192.240.168.0", &DNS);
+    add("host2", "192.255.168.1", &DNS);
+    add("host3", "192.255.0.0", &DNS);
+
     printTabelaDNS(DNS);
+
+    print("\n");
+    search("host2", DNS);
+    add("host3","155.155.0.0", &DNS);
+    print("\n");
+    
+    printTabelaDNS(DNS);
+
 
     char buf[BUFSZ];
     char *resposta = "hello";
@@ -115,16 +162,16 @@ int main(int argc, char *argv[]){
            
         memset(buf, 0, BUFSZ);
 
-        int clientfd;
-        struct sockaddr_storage client_storage;
-        struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
-        socklen_t client_addrlen = sizeof(client_storage);
+        // int clientfd;
+        // struct sockaddr_storage client_storage;
+        // struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
+        // socklen_t client_addrlen = sizeof(client_storage);
 
-        n = recvfrom(sockfd, (char *)buf, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &client_addr, &len); 
-        buf[n] = '\0'; 
-        printf("Client : %s\n", buf); 
+        // n = recvfrom(sockfd, (char *)buf, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &client_addr, &len); 
+        // buf[n] = '\0'; 
+        // printf("Client : %s\n", buf); 
         
-        sendto(sockfd, (const char *)resposta, strlen(resposta),  MSG_CONFIRM, (const struct sockaddr *) &client_addr, len);
+        // sendto(sockfd, (const char *)resposta, strlen(resposta),  MSG_CONFIRM, (const struct sockaddr *) &client_addr, len);
 
 
     }
