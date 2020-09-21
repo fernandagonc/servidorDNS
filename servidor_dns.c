@@ -4,15 +4,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include "funcoes_servidor.h"
 #include "common.h"
 #include <ctype.h> 
 
-#define BUFSZ 1024
 #define PROTOCOLO "v4"
-#define MAXLINE 1024 
-#define SIZE 1024
 //https://www.geeksforgeeks.org/udp-server-client-implementation-c/
 //https://sourcedaddy.com/networking/simple-dns-server.html
 
@@ -30,19 +26,21 @@ void printTabelaDNS(TabelaDNS DNS){
     };
 
 };
+
 void chamarComando (char * comando, TabelaDNS *DNS){
-    int j=0, ctr =0;
+    int j = 0, p = 0;
     char parametros[3][100]; 
 
+    //separar parametros do comando 
     for(int i=0; i <= (strlen(comando));i++){
  
          if(comando[i]==' '||comando[i]=='\0'){
-            parametros[ctr][j]='\0';
-            ctr++;  //for next word
-            j = 0;    //for next word, init index to 0
+            parametros[p][j]='\0';
+            p++;  //próximo parametro
+            j = 0;    //inicio em zero para próximo parâmetro
         }
         else{
-            parametros[ctr][j] = comando[i];
+            parametros[p][j] = comando[i];
             j++;
         }
     }
@@ -65,6 +63,7 @@ void chamarComando (char * comando, TabelaDNS *DNS){
     comparacao = strcmp(parametros[0], "link");
     if(comparacao == 0){
         printf("link \n");
+        link(parametros[1], parametros[2]);
         return;
     }
     else{
@@ -72,6 +71,7 @@ void chamarComando (char * comando, TabelaDNS *DNS){
         return;
     }
 };
+
 
 int main(int argc, char *argv[]){
 
@@ -82,7 +82,26 @@ int main(int argc, char *argv[]){
     TabelaDNS DNS;
     DNS.nroEntradas = 0;
     DNS.entradas = malloc(1 * sizeof(HostnameIP));
+   
+    struct sockaddr_storage storage;
+    if (0 != inicializarSocketAddr(PROTOCOLO, argv[1], &storage)) {
+        usage();
+    }
+
+	int sockfd;
+    sockfd = socket(storage.ss_family, SOCK_DGRAM, 0);
     
+	if((sockfd) < 0){
+        printf("\n Erro : Não foi possível criar o socket \n");
+        exit(1);
+    } 
+
+    struct sockaddr *addr = (struct sockaddr *)(&storage);
+    if (0 != bind(sockfd, addr, sizeof(storage))) {
+        printf("Erro no bind");
+        exit(1);
+    }
+        
     if(argc == 3){
         //abrir arquivo
         FILE *file = fopen(argv[2],"r");
@@ -101,26 +120,6 @@ int main(int argc, char *argv[]){
         }
     }
 
-	struct sockaddr_storage storage;
-    if (0 != inicializarSocketAddr(PROTOCOLO, argv[1], &storage)) {
-        usage();
-    }
-
-	int sockfd;
-    sockfd = socket(storage.ss_family, SOCK_DGRAM, 0);
-    
-	if((sockfd) < 0){
-        printf("\n Erro : Não foi possível criar o socket \n");
-        exit(1);
-    } 
-
-    struct sockaddr *addr = (struct sockaddr *)(&storage);
-    if (0 != bind(sockfd, addr, sizeof(storage))) {
-        printf("Erro no bind");
-        exit(1);
-    }
-
-
     while(1){
         printf("\nComando> ");
 	    char comando[50];
@@ -130,28 +129,6 @@ int main(int argc, char *argv[]){
         }
     }
     
-    char buf[BUFSZ];
-    char *resposta = "hello";
-    size_t count;
-    int n, len;
     
-    
-    memset(buf, 0, BUFSZ);
-
-    int clientfd;
-    struct sockaddr_storage client_storage;
-    struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
-    socklen_t client_addrlen = sizeof(client_storage);
-
-    // n = recvfrom(sockfd, (char *)buf, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &client_addr, &client_addrlen); 
-    n = recv(sockfd, (char *)buf, ( struct sockaddr *) &client_addr, &client_addrlen); 
-    buf[n] = '\0'; 
-    printf("Client : %s\n", buf); 
-    
-    // sendto(sockfd, (const char *)resposta, strlen(resposta),  MSG_CONFIRM, (const struct sockaddr *) &client_addr, client_addrlen);
-    send(sockfd, (const char *)resposta, strlen(resposta), 0);
-
-    
-    // close(sockfd);
     return 1;
 };

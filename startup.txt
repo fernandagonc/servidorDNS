@@ -6,3 +6,4 @@ search host5
 add host3 155.155.0.0 
 add host4 111.111.111.111
 search host3
+link 192.168.0.0 52

@@ -17,7 +17,13 @@ void add(char* hostname, char *enderecoIP, TabelaDNS * DNS);
 
 int posicaoHostNaTabela(char *hostname, TabelaDNS DNS);
 
-int search(char *hostname, TabelaDNS DNS);
+void search(char *hostname, TabelaDNS DNS);
+
+void link(char* ip, char *porta);
+
+void resposta(int sockfd, TabelaDNS DNS);
+
+void requisicao(int sockfd, char * hostname);
 
 int inicializarSocketAddr(const char *proto, const char *portstr, struct sockaddr_storage *storage);
 

@@ -5,6 +5,7 @@
 #include <ctype.h> 
 #include <arpa/inet.h>
 #include "funcoes_servidor.h"
+#define SIZE 1024
 
 struct HostnameIP novaEntrada(char* hostname, char *enderecoIP){
     HostnameIP novaEntrada;
@@ -52,23 +53,72 @@ int posicaoHostNaTabela(char *hostname, TabelaDNS DNS){
     return -1;
 }
 
-int search(char *hostname, TabelaDNS DNS){
+void search(char *hostname, TabelaDNS DNS){
     int posicao = posicaoHostNaTabela(hostname, DNS);
     if(posicao > 0){
         printf("Endereço associado ao host %s: %s \n", DNS.entradas[posicao].hostname, DNS.entradas[posicao].enderecoIP);
-        return 1;
+        return ;
     }
     else{
         //TODO requisições para outros servidores
         printf("Endereço associado ao host %s não encontrado. \n", hostname);
     }
 
-    return 0;
+    return;
 
 };
 
+void link(char* ip, char *porta){
+    printf("linking: %s at %s\n", ip, porta);
+};
 
 
+void resposta(int sockfd, TabelaDNS DNS){
+    int clientfd;
+    struct sockaddr_storage client_storage;
+    struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
+    socklen_t client_addrlen = sizeof(client_storage);
+    char buf[SIZE];
+    memset(buf, 0, SIZE);
+
+    int n = recv(sockfd, (char *)buf, ( struct sockaddr *) &client_addr, &client_addrlen); 
+    buf[n] = '\0'; 
+    printf("Hostname to find : %s\n", buf);
+
+    char *resposta = malloc(32);
+    resposta[0] = '2';
+    int posicao = posicaoHostNaTabela(buf, DNS);
+    if(posicao > 0 ){
+        strcat(resposta, DNS.entradas[posicao].enderecoIP);
+    }
+    else{
+        strcat(resposta, "-1");
+    }
+
+    send(sockfd, resposta, strlen(resposta), 0);
+
+    // n = recvfrom(sockfd, (char *)buf, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &client_addr, &client_addrlen); 
+    
+};
+
+void requisicao(int sockfd, char * hostname){
+
+    int clientfd;
+    struct sockaddr_storage client_storage;
+    struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
+    socklen_t client_addrlen = sizeof(client_storage);
+    char buf[SIZE];
+    memset(buf, 0, SIZE);
+    
+    char *requisicao = malloc((strlen(hostname) + 1));
+    requisicao[0] = '1';
+    strcat(requisicao, hostname);
+    send(sockfd, requisicao, strlen(requisicao), 0);
+    // sendto(sockfd, (const char *)resposta, strlen(resposta),  MSG_CONFIRM, (const struct sockaddr *) &client_addr, client_addrlen);
+    
+    int resposta = recv(sockfd, (char *)buf, ( struct sockaddr *) &client_addr, &client_addrlen); 
+
+}
 
 int inicializarSocketAddr(const char *proto, const char *portstr, struct sockaddr_storage *storage) {
    
