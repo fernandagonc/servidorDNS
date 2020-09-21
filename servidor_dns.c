@@ -27,12 +27,35 @@ void printTabelaDNS(TabelaDNS DNS){
 
 };
 
-void chamarComando (char * comando, TabelaDNS *DNS){
+int criarSocket(char * porta){
+    struct sockaddr_storage storage;
+    if (0 != inicializarSocketAddr(PROTOCOLO, porta, &storage)) {
+        usage();
+    }
+
+	int sockfd;
+    sockfd = socket(storage.ss_family, SOCK_DGRAM, 0);
+    
+	if((sockfd) < 0){
+        printf("\n Erro : Não foi possível criar o socket \n");
+        exit(1);
+    } 
+
+    struct sockaddr *addr = (struct sockaddr *)(&storage);
+    if (0 != bind(sockfd, addr, sizeof(storage))) {
+        printf("Erro no bind");
+        exit(1);
+    }
+
+    return sockfd;
+}
+
+void chamarComando (char * comando, TabelaDNS *DNS, int socket){
     int j = 0, p = 0;
     char parametros[3][100]; 
-
+    int length = strlen(comando);
     //separar parametros do comando 
-    for(int i=0; i <= (strlen(comando));i++){
+    for(int i = 0; i <= length; i++){
  
          if(comando[i]==' '||comando[i]=='\0'){
             parametros[p][j]='\0';
@@ -83,24 +106,7 @@ int main(int argc, char *argv[]){
     DNS.nroEntradas = 0;
     DNS.entradas = malloc(1 * sizeof(HostnameIP));
    
-    struct sockaddr_storage storage;
-    if (0 != inicializarSocketAddr(PROTOCOLO, argv[1], &storage)) {
-        usage();
-    }
-
-	int sockfd;
-    sockfd = socket(storage.ss_family, SOCK_DGRAM, 0);
-    
-	if((sockfd) < 0){
-        printf("\n Erro : Não foi possível criar o socket \n");
-        exit(1);
-    } 
-
-    struct sockaddr *addr = (struct sockaddr *)(&storage);
-    if (0 != bind(sockfd, addr, sizeof(storage))) {
-        printf("Erro no bind");
-        exit(1);
-    }
+    int socket = criarSocket(argv[1]);
         
     if(argc == 3){
         //abrir arquivo
@@ -112,7 +118,7 @@ int main(int argc, char *argv[]){
         else{
             while(fgets(linha, 1024, file)) {
                 linha[strcspn(linha, "\n")] = 0;
-                chamarComando(linha, &DNS);
+                chamarComando(linha, &DNS, socket);
                 printTabelaDNS(DNS);
                 printf("\n");
             }       
@@ -125,7 +131,7 @@ int main(int argc, char *argv[]){
 	    char comando[50];
 	    if(fgets(comando, 50, stdin)){
             comando[strcspn(comando, "\n")] = 0;
-            chamarComando(comando, &DNS);
+            chamarComando(comando, &DNS, socket);
         }
     }
     

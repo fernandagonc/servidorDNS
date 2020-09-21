@@ -74,14 +74,11 @@ void link(char* ip, char *porta){
 
 
 void resposta(int sockfd, TabelaDNS DNS){
-    int clientfd;
-    struct sockaddr_storage client_storage;
-    struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
-    socklen_t client_addrlen = sizeof(client_storage);
+
     char buf[SIZE];
     memset(buf, 0, SIZE);
 
-    int n = recv(sockfd, (char *)buf, ( struct sockaddr *) &client_addr, &client_addrlen); 
+    int n = recv(sockfd, (char *)buf, SIZE, 0); 
     buf[n] = '\0'; 
     printf("Hostname to find : %s\n", buf);
 
@@ -103,10 +100,10 @@ void resposta(int sockfd, TabelaDNS DNS){
 
 void requisicao(int sockfd, char * hostname){
 
-    int clientfd;
-    struct sockaddr_storage client_storage;
-    struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
-    socklen_t client_addrlen = sizeof(client_storage);
+    // int clientfd;
+    // struct sockaddr_storage client_storage;
+    // struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
+    // socklen_t client_addrlen = sizeof(client_storage);
     char buf[SIZE];
     memset(buf, 0, SIZE);
     
@@ -116,7 +113,8 @@ void requisicao(int sockfd, char * hostname){
     send(sockfd, requisicao, strlen(requisicao), 0);
     // sendto(sockfd, (const char *)resposta, strlen(resposta),  MSG_CONFIRM, (const struct sockaddr *) &client_addr, client_addrlen);
     
-    int resposta = recv(sockfd, (char *)buf, ( struct sockaddr *) &client_addr, &client_addrlen); 
+    int n = recv(sockfd, (char *)buf, SIZE, 0);  
+    printf("Hostname received : %s\n", buf);
 
 }
 
