@@ -9,6 +9,8 @@
 #include <ctype.h> 
 
 #define PROTOCOLO "v4"
+#define SIZE 1024
+
 //https://www.geeksforgeeks.org/udp-server-client-implementation-c/
 //https://sourcedaddy.com/networking/simple-dns-server.html
 
@@ -79,14 +81,14 @@ void chamarComando (char * comando, TabelaDNS *DNS, int socket){
     comparacao = strcmp(parametros[0], "search");
     if(comparacao == 0){
         printf("search %s \n", parametros[1]);
-        search(parametros[1], *DNS);
+        search(parametros[1], *DNS, socket);
         return;
     }
     
     comparacao = strcmp(parametros[0], "link");
     if(comparacao == 0){
         printf("link \n");
-        link(parametros[1], parametros[2]);
+        link(parametros[1], parametros[2], socket);
         return;
     }
     else{
@@ -107,7 +109,8 @@ int main(int argc, char *argv[]){
     DNS.entradas = malloc(1 * sizeof(HostnameIP));
    
     int socket = criarSocket(argv[1]);
-        
+    char buf[SIZE];
+
     if(argc == 3){
         //abrir arquivo
         FILE *file = fopen(argv[2],"r");
@@ -132,6 +135,22 @@ int main(int argc, char *argv[]){
 	    if(fgets(comando, 50, stdin)){
             comando[strcspn(comando, "\n")] = 0;
             chamarComando(comando, &DNS, socket);
+        }
+        if(recv(socket, buf, SIZE, 0)){
+            char *requisicao;
+            memmove(requisicao, buf+1, strlen (buf+1) + 1);
+            printf("buf: %s, requisicao: %s", buf, requisicao);
+            char *IP = (char *)searchLocal(requisicao, DNS);
+            char *resposta = "2";
+
+            if(IP != 0){
+                strcat(resposta, IP);
+            }
+            else{
+                strcat(resposta, "-1");
+            }
+            send(socket, resposta, sizeof(resposta), 0);
+
         }
     }
     

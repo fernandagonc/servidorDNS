@@ -17,9 +17,11 @@ void add(char* hostname, char *enderecoIP, TabelaDNS * DNS);
 
 int posicaoHostNaTabela(char *hostname, TabelaDNS DNS);
 
-void search(char *hostname, TabelaDNS DNS);
+char * searchLocal(char *hostname, TabelaDNS DNS);
 
-void link(char* ip, char *porta);
+void search(char *hostname, TabelaDNS DNS, int socket);
+
+void link(char* ip, char *porta, int socket);
 
 void resposta(int sockfd, TabelaDNS DNS);
 

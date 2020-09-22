@@ -53,14 +53,24 @@ int posicaoHostNaTabela(char *hostname, TabelaDNS DNS){
     return -1;
 }
 
-void search(char *hostname, TabelaDNS DNS){
+char *searchLocal(char *hostname, TabelaDNS DNS){
     int posicao = posicaoHostNaTabela(hostname, DNS);
     if(posicao > 0){
         printf("Endereço associado ao host %s: %s \n", DNS.entradas[posicao].hostname, DNS.entradas[posicao].enderecoIP);
-        return ;
+        return DNS.entradas[posicao].enderecoIP;
     }
+    return 0;
+}
+
+void search(char *hostname, TabelaDNS DNS, int socket){
+    char IP = searchLocal(hostname, DNS);
+
+    if(IP != 0){
+        return;
+    }
+
     else{
-        //TODO requisições para outros servidores
+        requisicao(socket, hostname);
         printf("Endereço associado ao host %s não encontrado. \n", hostname);
     }
 
@@ -68,55 +78,64 @@ void search(char *hostname, TabelaDNS DNS){
 
 };
 
-void link(char* ip, char *porta){
-    printf("linking: %s at %s\n", ip, porta);
-};
-
-
-void resposta(int sockfd, TabelaDNS DNS){
-
-    char buf[SIZE];
-    memset(buf, 0, SIZE);
-
-    int n = recv(sockfd, (char *)buf, SIZE, 0); 
-    buf[n] = '\0'; 
-    printf("Hostname to find : %s\n", buf);
-
-    char *resposta = malloc(32);
-    resposta[0] = '2';
-    int posicao = posicaoHostNaTabela(buf, DNS);
-    if(posicao > 0 ){
-        strcat(resposta, DNS.entradas[posicao].enderecoIP);
-    }
-    else{
-        strcat(resposta, "-1");
-    }
-
-    send(sockfd, resposta, strlen(resposta), 0);
-
-    // n = recvfrom(sockfd, (char *)buf, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &client_addr, &client_addrlen); 
-    
-};
-
 void requisicao(int sockfd, char * hostname){
 
-    // int clientfd;
-    // struct sockaddr_storage client_storage;
-    // struct sockaddr *client_addr = (struct sockaddr *)(&client_storage);
-    // socklen_t client_addrlen = sizeof(client_storage);
+   // int clientfd;
+    char *ip = "192.168.0.0";
+   // char *porta = "52";
+    // struct sockaddr_storage server_storage;
+    // struct sockaddr *server_addr = (struct sockaddr *)(&server_storage);
+    // socklen_t server_addrlen = sizeof(server_storage);
+    struct sockaddr *server_addr = ip;
+    socklen_t server_addrlen = sizeof(ip);
+
     char buf[SIZE];
     memset(buf, 0, SIZE);
     
     char *requisicao = malloc((strlen(hostname) + 1));
     requisicao[0] = '1';
     strcat(requisicao, hostname);
-    send(sockfd, requisicao, strlen(requisicao), 0);
-    // sendto(sockfd, (const char *)resposta, strlen(resposta),  MSG_CONFIRM, (const struct sockaddr *) &client_addr, client_addrlen);
+    //send(sockfd, requisicao, strlen(requisicao), 0);
+    sendto(sockfd, requisicao, strlen(requisicao),  0, (const struct sockaddr *) &server_addr, server_addrlen);
     
-    int n = recv(sockfd, (char *)buf, SIZE, 0);  
-    printf("Hostname received : %s\n", buf);
+    if(recv(sockfd, (char *)buf, SIZE, 0)){
+        printf("Hostname received : %s\n", buf);
+    }
 
 }
+
+void link(char* ip, char *porta, int socket){
+
+    printf("linking: %s at %s\n", ip, porta);
+};
+
+
+// void resposta(int sockfd, TabelaDNS DNS){
+
+//     char buf[SIZE];
+//     memset(buf, 0, SIZE);
+
+//     int n = recv(sockfd, (char *)buf, SIZE, 0); 
+//     buf[n] = '\0'; 
+//     printf("Hostname to find : %s\n", buf);
+
+//     char *resposta = malloc(32);
+//     resposta[0] = '2';
+//     int posicao = posicaoHostNaTabela(buf, DNS);
+//     if(posicao > 0 ){
+//         strcat(resposta, DNS.entradas[posicao].enderecoIP);
+//     }
+//     else{
+//         strcat(resposta, "-1");
+//     }
+
+//     send(sockfd, resposta, strlen(resposta), 0);
+
+//      //n = recvfrom(sockfd, (char *)buf, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &client_addr, &client_addrlen); 
+    
+// };
+
+
 
 int inicializarSocketAddr(const char *proto, const char *portstr, struct sockaddr_storage *storage) {
    
