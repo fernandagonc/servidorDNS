@@ -5,6 +5,8 @@
 #include <ctype.h> 
 #include <arpa/inet.h>
 #include "funcoes_servidor.h"
+#include "servidor.h"
+
 #define SIZE 1024
 
 struct HostnameIP novaEntrada(char* hostname, char *enderecoIP){
@@ -55,22 +57,37 @@ int posicaoHostNaTabela(char *hostname, TabelaDNS DNS){
 
 char *searchLocal(char *hostname, TabelaDNS DNS){
     int posicao = posicaoHostNaTabela(hostname, DNS);
-    if(posicao > 0){
+
+    if(posicao >= 0){
         printf("Endereço associado ao host %s: %s \n", DNS.entradas[posicao].hostname, DNS.entradas[posicao].enderecoIP);
         return DNS.entradas[posicao].enderecoIP;
     }
     return 0;
 }
 
-void search(char *hostname, TabelaDNS DNS, int socket){
-    char IP = searchLocal(hostname, DNS);
+void search(char *hostname, TabelaDNS DNS, TabelaLinks links){
+
+    char * IP = searchLocal(hostname, DNS);
 
     if(IP != 0){
         return;
     }
-
+    
     else{
-        requisicao(socket, hostname);
+        // int sock = criarSocket("8080");
+        // struct sockaddr_storage server_storage;
+        // struct sockaddr *server_addr = (struct sockaddr *)(&server_storage);
+
+        // char * buf[SIZE];
+        // for(int i = 0; i < links.nroLinks; i++){
+        //     struct sockaddr *server_addr = links.conexoes[i].enderecoIP;
+        //     socklen_t server_addrlen = sizeof(links.conexoes[i].enderecoIP);
+        //     sendto(sock, hostname, sizeof(hostname), 0,  (const struct sockaddr *) &server_addr, server_addrlen);
+        //     if(recv(sock, buf, SIZE, 0)){
+        //         printf("Hostname received : %s\n", *buf);
+        //     }
+        //}
+
         printf("Endereço associado ao host %s não encontrado. \n", hostname);
     }
 
@@ -78,35 +95,53 @@ void search(char *hostname, TabelaDNS DNS, int socket){
 
 };
 
-void requisicao(int sockfd, char * hostname){
+// void requisicao(int sockfd, char * hostname){
 
-   // int clientfd;
-    char *ip = "192.168.0.0";
-   // char *porta = "52";
-    // struct sockaddr_storage server_storage;
-    // struct sockaddr *server_addr = (struct sockaddr *)(&server_storage);
-    // socklen_t server_addrlen = sizeof(server_storage);
-    struct sockaddr *server_addr = ip;
-    socklen_t server_addrlen = sizeof(ip);
+//    // int clientfd;
+//     char *ip = "192.168.0.0";
+//    // char *porta = "52";
+//     // struct sockaddr_storage server_storage;
+//     // struct sockaddr *server_addr = (struct sockaddr *)(&server_storage);
+//     // socklen_t server_addrlen = sizeof(server_storage);
+//     struct sockaddr *server_addr = ip;
+//     socklen_t server_addrlen = sizeof(ip);
 
-    char buf[SIZE];
-    memset(buf, 0, SIZE);
+//     char buf[SIZE];
+//     memset(buf, 0, SIZE);
     
-    char *requisicao = malloc((strlen(hostname) + 1));
-    requisicao[0] = '1';
-    strcat(requisicao, hostname);
-    //send(sockfd, requisicao, strlen(requisicao), 0);
-    sendto(sockfd, requisicao, strlen(requisicao),  0, (const struct sockaddr *) &server_addr, server_addrlen);
+//     char *requisicao = malloc((strlen(hostname) + 1));
+//     requisicao[0] = '1';
+//     strcat(requisicao, hostname);
+//     //send(sockfd, requisicao, strlen(requisicao), 0);
+//     sendto(sockfd, requisicao, strlen(requisicao),  0, (const struct sockaddr *) &server_addr, server_addrlen);
     
-    if(recv(sockfd, (char *)buf, SIZE, 0)){
-        printf("Hostname received : %s\n", buf);
-    }
+//     if(recv(sockfd, (char *)buf, SIZE, 0)){
+//         printf("Hostname received : %s\n", buf);
+//     }
 
+// }
+
+struct ServerLinks novoLink(char* ip, char *porta){
+    ServerLinks novoLink;
+
+    memcpy(novoLink.enderecoIP, ip, 32);
+    memcpy(novoLink.porta, porta, 10);
+
+    return novoLink;
 }
 
-void link(char* ip, char *porta, int socket){
+void linkServers(char* ip, char *porta, TabelaLinks * links){
 
-    printf("linking: %s at %s\n", ip, porta);
+    links->conexoes[links->nroLinks] = novoLink(ip, porta);
+    links->nroLinks += 1;
+    
+    // aumentar tamanho da tabela para próxima inserção
+    void *tmp = realloc(links->conexoes, (links->nroLinks + 1) * sizeof(HostnameIP));
+    if (tmp == NULL) {
+        printf("Falha no realloc");
+    } else {
+        links->conexoes = tmp;
+    }
 };
 
 
@@ -136,30 +171,4 @@ void link(char* ip, char *porta, int socket){
 // };
 
 
-
-int inicializarSocketAddr(const char *proto, const char *portstr, struct sockaddr_storage *storage) {
-   
-    uint16_t port = (uint16_t)atoi(portstr); 
-    if (port == 0) {
-        return -1;
-    }
-    port = htons(port); 
-
-    memset(storage, 0, sizeof(*storage));
-    if (0 == strcmp(proto, "v4")) {
-        struct sockaddr_in *addr4 = (struct sockaddr_in *)storage;
-        addr4->sin_family = AF_INET;
-        addr4->sin_addr.s_addr = INADDR_ANY;
-        addr4->sin_port = port;
-        return 0;
-    } else if (0 == strcmp(proto, "v6")) {
-        struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)storage;
-        addr6->sin6_family = AF_INET6;
-        addr6->sin6_addr = in6addr_any;
-        addr6->sin6_port = port;
-        return 0;
-    } else {
-        return -1;
-    }
-};
 

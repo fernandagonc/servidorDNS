@@ -11,6 +11,22 @@ typedef struct TabelaDNS {
     struct HostnameIP* entradas;
 } TabelaDNS;
 
+typedef struct ServerLinks {
+    char enderecoIP[32];
+    char porta[10];
+} ServerLinks;
+
+typedef struct TabelaLinks {
+    int nroLinks;
+    struct ServerLinks * conexoes;
+} TabelaLinks;
+
+typedef struct ThreadArgs{
+    char * porta;
+    TabelaDNS DNS;
+
+} ThreadArgs;
+
 struct HostnameIP novaEntrada(char* hostname, char *enderecoIP);
 
 void add(char* hostname, char *enderecoIP, TabelaDNS * DNS);
@@ -19,14 +35,15 @@ int posicaoHostNaTabela(char *hostname, TabelaDNS DNS);
 
 char * searchLocal(char *hostname, TabelaDNS DNS);
 
-void search(char *hostname, TabelaDNS DNS, int socket);
+void search(char *hostname, TabelaDNS DNS, TabelaLinks links);
 
-void link(char* ip, char *porta, int socket);
+struct ServerLinks novoLink(char* ip, char *porta);
+
+void linkServers(char* ip, char *porta, TabelaLinks *links);
 
 void resposta(int sockfd, TabelaDNS DNS);
 
 void requisicao(int sockfd, char * hostname);
 
-int inicializarSocketAddr(const char *proto, const char *portstr, struct sockaddr_storage *storage);
 
 #endif

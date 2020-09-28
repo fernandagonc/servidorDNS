@@ -3,17 +3,17 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h> 
+#include <pthread.h>
 #include <string.h>
 #include "funcoes_servidor.h"
 #include "common.h"
-#include <ctype.h> 
+#include "servidor.h"
+#include "thread.h"
+#include <unistd.h>
 
 #define PROTOCOLO "v4"
 #define SIZE 1024
-
-//https://www.geeksforgeeks.org/udp-server-client-implementation-c/
-//https://sourcedaddy.com/networking/simple-dns-server.html
-
 
 void usage() {
 	printf("Uso:<porta> [startup]\n");
@@ -29,30 +29,16 @@ void printTabelaDNS(TabelaDNS DNS){
 
 };
 
-int criarSocket(char * porta){
-    struct sockaddr_storage storage;
-    if (0 != inicializarSocketAddr(PROTOCOLO, porta, &storage)) {
-        usage();
-    }
+void printTabelaLinks(TabelaLinks links){
+    int i=0;
+    for (i = 0; i < links.nroLinks; i++){
+        printf("IP: %s Porta: %s \n", links.conexoes[i].enderecoIP, links.conexoes[i].porta);
+    };
 
-	int sockfd;
-    sockfd = socket(storage.ss_family, SOCK_DGRAM, 0);
-    
-	if((sockfd) < 0){
-        printf("\n Erro : Não foi possível criar o socket \n");
-        exit(1);
-    } 
+};
 
-    struct sockaddr *addr = (struct sockaddr *)(&storage);
-    if (0 != bind(sockfd, addr, sizeof(storage))) {
-        printf("Erro no bind");
-        exit(1);
-    }
 
-    return sockfd;
-}
-
-void chamarComando (char * comando, TabelaDNS *DNS, int socket){
+void chamarComando (char * comando, TabelaDNS *DNS, TabelaLinks *links){
     int j = 0, p = 0;
     char parametros[3][100]; 
     int length = strlen(comando);
@@ -69,11 +55,10 @@ void chamarComando (char * comando, TabelaDNS *DNS, int socket){
             j++;
         }
     }
-
     int comparacao = strcmp(parametros[0], "add");
 
     if(comparacao == 0){
-        printf("add %s %s\n", parametros[1], parametros[2] );
+        printf("add %s %s\n", parametros[1], parametros[2]);
         add(parametros[1], parametros[2], DNS);
         return;
     }
@@ -81,14 +66,16 @@ void chamarComando (char * comando, TabelaDNS *DNS, int socket){
     comparacao = strcmp(parametros[0], "search");
     if(comparacao == 0){
         printf("search %s \n", parametros[1]);
-        search(parametros[1], *DNS, socket);
+        search(parametros[1], *DNS, *links);
+
         return;
     }
     
     comparacao = strcmp(parametros[0], "link");
     if(comparacao == 0){
         printf("link \n");
-        link(parametros[1], parametros[2], socket);
+        linkServers(parametros[1], parametros[2], links);
+        printTabelaLinks(*links);
         return;
     }
     else{
@@ -96,6 +83,8 @@ void chamarComando (char * comando, TabelaDNS *DNS, int socket){
         return;
     }
 };
+
+
 
 
 int main(int argc, char *argv[]){
@@ -108,20 +97,29 @@ int main(int argc, char *argv[]){
     DNS.nroEntradas = 0;
     DNS.entradas = malloc(1 * sizeof(HostnameIP));
    
-    int socket = criarSocket(argv[1]);
-    char buf[SIZE];
+    TabelaLinks links;
+    links.nroLinks = 0;
+    links.conexoes = malloc(1 * sizeof(ServerLinks));
+
+    ThreadArgs * args;
+    args->porta = argv[1];
+    args->DNS = DNS;
+
+    criarThread(args);
+    sleep(1);
+
+    char linha[1024];  
 
     if(argc == 3){
         //abrir arquivo
         FILE *file = fopen(argv[2],"r");
-        char linha[1024];  
         if( file == NULL ){                       
             return -1;
         }
         else{
             while(fgets(linha, 1024, file)) {
                 linha[strcspn(linha, "\n")] = 0;
-                chamarComando(linha, &DNS, socket);
+                chamarComando(linha, &DNS, &links);
                 printTabelaDNS(DNS);
                 printf("\n");
             }       
@@ -134,24 +132,12 @@ int main(int argc, char *argv[]){
 	    char comando[50];
 	    if(fgets(comando, 50, stdin)){
             comando[strcspn(comando, "\n")] = 0;
-            chamarComando(comando, &DNS, socket);
-        }
-        if(recv(socket, buf, SIZE, 0)){
-            char *requisicao;
-            memmove(requisicao, buf+1, strlen (buf+1) + 1);
-            printf("buf: %s, requisicao: %s", buf, requisicao);
-            char *IP = (char *)searchLocal(requisicao, DNS);
-            char *resposta = "2";
+            chamarComando(comando, &DNS, &links);
+            printTabelaDNS(DNS);
+            printf("\n");
 
-            if(IP != 0){
-                strcat(resposta, IP);
-            }
-            else{
-                strcat(resposta, "-1");
-            }
-            send(socket, resposta, sizeof(resposta), 0);
-
-        }
+        }      
+        
     }
     
     
