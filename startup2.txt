@@ -1,0 +1,7 @@
+add host5 192.240.168.1
+add host6 192.255.168.0
+add host7 192.255.0.0
+search host6
+add host9 155.155.0.0 
+add host10 111.111.111.111
+search host10

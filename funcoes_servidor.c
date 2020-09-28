@@ -1,9 +1,10 @@
-#include <inttypes.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h> 
 #include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include "funcoes_servidor.h"
 #include "servidor.h"
 
@@ -74,19 +75,25 @@ void search(char *hostname, TabelaDNS DNS, TabelaLinks links){
     }
     
     else{
-        // int sock = criarSocket("8080");
-        // struct sockaddr_storage server_storage;
-        // struct sockaddr *server_addr = (struct sockaddr *)(&server_storage);
+
+        // struct sockaddr_storage linked_storage;
+        // struct sockaddr *linked_addr = (struct sockaddr *)(&linked_storage);
+        // socklen_t linked_addrlen = sizeof(linked_storage);
+        // memset(&linked_storage, 0, sizeof(linked_storage)); 
 
         // char * buf[SIZE];
         // for(int i = 0; i < links.nroLinks; i++){
-        //     struct sockaddr *server_addr = links.conexoes[i].enderecoIP;
-        //     socklen_t server_addrlen = sizeof(links.conexoes[i].enderecoIP);
-        //     sendto(sock, hostname, sizeof(hostname), 0,  (const struct sockaddr *) &server_addr, server_addrlen);
+        //     printf("tentativa: porta: %s ip: %s \n", links.conexoes[i].porta, links.conexoes[i].enderecoIP);
+        //     int sock = criarSocket(links.conexoes[i].porta);
+
+        //     printf("tentativa de send");
+        //     sendto(sock, hostname, sizeof(hostname), MSG_CONFIRM,  (struct sockaddr *) &linked_addr, linked_addrlen);
+            
         //     if(recv(sock, buf, SIZE, 0)){
         //         printf("Hostname received : %s\n", *buf);
+        //         close(sock);
         //     }
-        //}
+        // }
 
         printf("Endereço associado ao host %s não encontrado. \n", hostname);
     }

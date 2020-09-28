@@ -1,4 +1,4 @@
-#include <inttypes.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,7 +49,13 @@ int criarSocket(char * porta){
         printf("\n Erro : Não foi possível criar o socket \n");
         exit(1);
     } 
-
+    
+    int enable = 1;
+    if (0 != setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
+        printf("Erro na função setsockopt");
+        exit(1);
+    }
+    
     struct sockaddr *addr = (struct sockaddr *)(&storage);
     if (0 != bind(sockfd, addr, sizeof(storage))) {
         printf("Erro no bind");

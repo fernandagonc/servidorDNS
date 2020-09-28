@@ -3,8 +3,6 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <ctype.h> 
-#include <pthread.h>
 #include <string.h>
 #include "funcoes_servidor.h"
 #include "common.h"
@@ -101,11 +99,13 @@ int main(int argc, char *argv[]){
     links.nroLinks = 0;
     links.conexoes = malloc(1 * sizeof(ServerLinks));
 
-    ThreadArgs * args;
-    args->porta = argv[1];
-    args->DNS = DNS;
+    ThreadArgs args;
+    ThreadArgs *args_addr;
 
-    criarThread(args);
+    args.porta = argv[1];
+    args.DNS = DNS;
+    args_addr = &args;
+    criarThread(args_addr);
     sleep(1);
 
     char linha[1024];  
