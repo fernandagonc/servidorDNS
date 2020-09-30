@@ -12,8 +12,9 @@ typedef struct TabelaDNS {
 } TabelaDNS;
 
 typedef struct ServerLinks {
-    char enderecoIP[32];
     char porta[10];
+    int socket;
+    struct sockaddr_storage *storage;
 } ServerLinks;
 
 typedef struct TabelaLinks {
@@ -24,6 +25,7 @@ typedef struct TabelaLinks {
 typedef struct ThreadArgs{
     char * porta;
     TabelaDNS DNS;
+    TabelaLinks links;
 
 } ThreadArgs;
 

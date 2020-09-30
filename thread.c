@@ -29,28 +29,42 @@ void *connectionHandler(void *argPointer) {
     ThreadArgs *args = argPointer;
     char* port = args->porta; 
 
-    int socket = criarSocket(port);
+    ServerLinks serverSocket = criarSocket(port);
+    int sockfd = &serverSocket.socket ;
+    struct sockaddr_storage *storage = &serverSocket.storage;
+    socklen_t len = sizeof(*storage);
+
+    struct sockaddr_storage *client_storage;
+    memset(&client_storage, 0, sizeof(client_storage)); 
+    socklen_t client_len = sizeof(client_storage);
+    
     printf("Porta da thread: %s ", args->porta);
     printf("Open to recv \n");
+    
+    // while(1){
+        int count = recvfrom(sockfd, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &client_storage, &client_len);
 
-    int count = recv(socket, buf, SIZE, 0);
-    if(count > 0){
-        printf("received something ");
-        char *requisicao = "";
-        memmove(requisicao, buf+1, strlen (buf+1) + 1);
-        printf("buf: %s, requisicao: %s", buf, requisicao);
-        char *IP = (char *)searchLocal(requisicao, args->DNS);
-        char *resposta = "2";
+        if(count > 0){
+            printf("received something ");
+            char *requisicao = "";
+            memmove(requisicao, buf+1, strlen (buf+1) + 1);
+            printf("buf: %s, requisicao: %s", buf, requisicao);
+            char *IP = (char *)searchLocal(requisicao, args->DNS);
+            char *resposta = "2";
 
-        if(IP != 0){
-            strcat(resposta, IP);
+            if(IP != 0){
+                strcat(resposta, IP);
+            }
+            else{
+                strcat(resposta, "-1");
+            }
+            
+            int send = sendto(sockfd, resposta, sizeof(resposta), 0, (const struct sockaddr *)client_storage, len);
+            if(send < 0) exit(1);
         }
-        else{
-            strcat(resposta, "-1");
-        }
-        send(socket, resposta, sizeof(resposta), 0);
-    }
 
+    //}
+   
     return 0;
 }
 

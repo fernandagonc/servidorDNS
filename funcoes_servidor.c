@@ -8,6 +8,7 @@
 #include "funcoes_servidor.h"
 #include "servidor.h"
 
+#define PROTOCOLO "v4"
 #define SIZE 1024
 
 struct HostnameIP novaEntrada(char* hostname, char *enderecoIP){
@@ -76,24 +77,29 @@ void search(char *hostname, TabelaDNS DNS, TabelaLinks links){
     
     else{
 
-        // struct sockaddr_storage linked_storage;
-        // struct sockaddr *linked_addr = (struct sockaddr *)(&linked_storage);
-        // socklen_t linked_addrlen = sizeof(linked_storage);
-        // memset(&linked_storage, 0, sizeof(linked_storage)); 
+        char * buf[SIZE];
+        for(int i = 0; i < links.nroLinks; i++){
+            int sockfd = &links.conexoes[i].socket ;
+            struct sockaddr_storage *storage = links.conexoes[i].storage;
+            socklen_t len = sizeof(&storage);
 
-        // char * buf[SIZE];
-        // for(int i = 0; i < links.nroLinks; i++){
-        //     printf("tentativa: porta: %s ip: %s \n", links.conexoes[i].porta, links.conexoes[i].enderecoIP);
-        //     int sock = criarSocket(links.conexoes[i].porta);
+            printf("tentativa porta: %s\n", links.conexoes[i].porta);
+            printf("tentativa de send");
+    
+            int send = sendto(sockfd, hostname, 
+            sizeof(hostname), MSG_CONFIRM,
+            (const struct sockaddr *)&storage,
+            len);
+    
+            if(send < 0){
+                printf("falha no send :( \n");
+            }
+    
+            if(recvfrom(sockfd, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &storage, &len)){
+                printf("Hostname received : %s\n", *buf);
 
-        //     printf("tentativa de send");
-        //     sendto(sock, hostname, sizeof(hostname), MSG_CONFIRM,  (struct sockaddr *) &linked_addr, linked_addrlen);
-            
-        //     if(recv(sock, buf, SIZE, 0)){
-        //         printf("Hostname received : %s\n", *buf);
-        //         close(sock);
-        //     }
-        // }
+            }
+        }
 
         printf("Endereço associado ao host %s não encontrado. \n", hostname);
     }
@@ -129,9 +135,7 @@ void search(char *hostname, TabelaDNS DNS, TabelaLinks links){
 // }
 
 struct ServerLinks novoLink(char* ip, char *porta){
-    ServerLinks novoLink;
-
-    memcpy(novoLink.enderecoIP, ip, 32);
+    ServerLinks novoLink = criarSocket(porta);
     memcpy(novoLink.porta, porta, 10);
 
     return novoLink;
@@ -143,7 +147,7 @@ void linkServers(char* ip, char *porta, TabelaLinks * links){
     links->nroLinks += 1;
     
     // aumentar tamanho da tabela para próxima inserção
-    void *tmp = realloc(links->conexoes, (links->nroLinks + 1) * sizeof(HostnameIP));
+    void *tmp = realloc(links->conexoes, (links->nroLinks + 1) * sizeof(ServerLinks));
     if (tmp == NULL) {
         printf("Falha no realloc");
     } else {

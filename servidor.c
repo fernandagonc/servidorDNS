@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-
+#include "funcoes_servidor.h"
 #define PROTOCOLO "v4"
 #define SIZE 1024
 
@@ -36,7 +36,8 @@ int inicializarSocketAddr(const char *proto, const char *portstr, struct sockadd
     }
 };
 
-int criarSocket(char * porta){
+ServerLinks criarSocket(char * porta){
+    ServerLinks conexao;
     struct sockaddr_storage storage;
     if (0 != inicializarSocketAddr(PROTOCOLO, porta, &storage)) {
         exit(1);
@@ -61,6 +62,10 @@ int criarSocket(char * porta){
         printf("Erro no bind");
         exit(1);
     }
+    
+    conexao.socket = sockfd;
+    conexao.storage = &storage;
+
     printf("Socket para comunicação criado com sucesso. \n");
-    return sockfd;
+    return conexao;
 }

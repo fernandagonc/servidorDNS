@@ -13,7 +13,7 @@
 
 int inicializarSocketAddr(const char *proto, const char *portstr, struct sockaddr_storage *storage);
 
-int criarSocket(char * porta);
+ServerLinks criarSocket(char * porta);
 
 
 #endif

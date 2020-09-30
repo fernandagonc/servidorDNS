@@ -30,7 +30,7 @@ void printTabelaDNS(TabelaDNS DNS){
 void printTabelaLinks(TabelaLinks links){
     int i=0;
     for (i = 0; i < links.nroLinks; i++){
-        printf("IP: %s Porta: %s \n", links.conexoes[i].enderecoIP, links.conexoes[i].porta);
+        printf("Porta: %s \n", links.conexoes[i].porta);
     };
 
 };
