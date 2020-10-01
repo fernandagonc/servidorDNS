@@ -1,6 +1,7 @@
 #include "thread.h"
 #include "funcoes_servidor.h"
 #include "servidor.h"
+#include "common.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,41 +54,50 @@ void *connectionHandler(void *argPointer) {
         buf[count] = '\0'; 
 
         if(count > 0){
-            printf("received: %s ", buf);
-            // char *host; 
-            // int i = 1;
-            // for( i = 1; i <= sizeof(buf); i++){
-            //     host[i-1] = buf[i];
-            // }
-            // host[i] = '\0';
-            // printf("host: %s \n", host);
-            // char * IP = searchLocal(host, args->DNS);
-            // printf("ip: %s \n", IP);
+            printf("received: %s \n", buf);
+            if(charToInt(buf[0]) == 1){
+                char *host = buf; 
+                int i = 1;
+                int length = strlen(buf);
 
-            // // char IP[SIZE] = "teste";
-            char *resposta = "2";
+                for( i = 1; i < length; i++){
+                    host[i-1] = buf[i];
+                }
+                host[i-1] = '\0';
+                printf("search host: %s \n", host);
+                char *IP;
+                IP = malloc(33);
+                memset(IP, 0, 33);
 
-            // if(IP != 0){
-            //     strcat(resposta, IP);
-            // }
-            // else{
-            //     IP = "-1";
-            //     strcat(resposta, IP);
-            // }
-            // printf("IP: %s \n", IP);
+                char * resposta;
+                resposta = malloc(100);
+                memset(resposta, 0, 100);
+                resposta[0] = '2';
+             
+                IP = searchLocal(host, args->DNS);
+                printf("ip: %s \n", IP);
+                if(IP == 0){
+                    IP = "-1";
+                }
+                printf("IP: %s \n", IP);
+                strcat(resposta, IP);
 
+
+                int send = sendto(sockfd, resposta, sizeof(resposta), 0, (const struct sockaddr *)&client_storage, client_len);
+                if(send < 0){
+                    perror("Erro no send: ");
+                }
+                else{
+                    printf("Resposta: %s enviada com sucesso!\n", resposta);
+                    send = 0;
+                    count = 0;
+                    memset(buf, 0, SIZE);
+                    //resposta = "";
+                }
+            }
+       
             
-            // int send = sendto(sockfd, resposta, sizeof(resposta), 0, (const struct sockaddr *)&address, sizeof(address));
-            // if(send < 0){
-            //     perror("Erro no send: ");
-            // }
-            // else{
-            //     printf("Resposta: %s enviada com sucesso!\n", resposta);
-            //     send = 0;
-            //     count = 0;
-            //     memset(buf, 0, sizeof(buf));
-            //     //resposta = "";
-            // }
+            
         }
         
 

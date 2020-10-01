@@ -31,6 +31,10 @@ typedef struct ThreadArgs{
 
 } ThreadArgs;
 
+void printTabelaLinks(TabelaLinks links);
+
+void printTabelaDNS(TabelaDNS DNS);
+
 struct HostnameIP novaEntrada(char* hostname, char *enderecoIP);
 
 void add(char* hostname, char *enderecoIP, TabelaDNS * DNS);

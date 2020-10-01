@@ -11,6 +11,22 @@
 #define PROTOCOLO "v4"
 #define SIZE 1024
 
+void printTabelaDNS(TabelaDNS DNS){
+    int i=0;
+    for (i = 0; i < DNS.nroEntradas; i++){
+        printf("Host: %s IP: %s \n", DNS.entradas[i].hostname, DNS.entradas[i].enderecoIP);
+    };
+
+};
+
+void printTabelaLinks(TabelaLinks links){
+    int i=0;
+    for (i = 0; i < links.nroLinks; i++){
+        printf("Porta: %s IP: %s \n", links.conexoes[i].porta, links.conexoes[i].ip);
+    };
+
+};
+
 struct HostnameIP novaEntrada(char* hostname, char *enderecoIP){
     HostnameIP novaEntrada;
 
@@ -64,6 +80,7 @@ char *searchLocal(char *hostname, TabelaDNS DNS){
         printf("Endereço associado ao host %s: %s \n", DNS.entradas[posicao].hostname, DNS.entradas[posicao].enderecoIP);
         return DNS.entradas[posicao].enderecoIP;
     }
+
     return 0;
 }
 
@@ -87,7 +104,7 @@ void search(char *hostname, TabelaDNS DNS, TabelaLinks links){
 
             printf("send p/ porta: %s\n", links.conexoes[i].porta);
             sendMessage(sockfd, links.conexoes[i].ip, atoi(links.conexoes[i].porta), hostname);
-            
+            memset(buf, 0, SIZE);
             int recv =  recvfrom(sockfd, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &storage, &len);
 
             if(recv > 0){

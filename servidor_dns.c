@@ -19,21 +19,6 @@ void usage() {
 	exit(EXIT_FAILURE);
 }
 
-void printTabelaDNS(TabelaDNS DNS){
-    int i=0;
-    for (i = 0; i < DNS.nroEntradas; i++){
-        printf("Host: %s IP: %s \n", DNS.entradas[i].hostname, DNS.entradas[i].enderecoIP);
-    };
-
-};
-
-void printTabelaLinks(TabelaLinks links){
-    int i=0;
-    for (i = 0; i < links.nroLinks; i++){
-        printf("Porta: %s IP: %s \n", links.conexoes[i].porta, links.conexoes[i].ip);
-    };
-
-};
 
 
 void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links){

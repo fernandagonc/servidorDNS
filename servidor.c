@@ -89,8 +89,13 @@ void sendMessage(int socket, char * ip, int port, char* message) {
     address.sin_family = AF_INET; 
     address.sin_port = htons(port); 
     address.sin_addr = inaddr4;
+    char * requisicao;
+    requisicao = malloc(SIZE);
+    memset(requisicao, 0, SIZE);
+    requisicao[0] = '1';
+    strcat(requisicao, message);
 
-    int send = sendto(socket, (const char *)message, strlen(message), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
+    int send = sendto(socket, (const char *)requisicao, strlen(requisicao), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
     if(send < 0){
         perror("Erro no send: ");
     }
