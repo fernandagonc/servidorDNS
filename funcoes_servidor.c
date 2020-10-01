@@ -77,28 +77,24 @@ void search(char *hostname, TabelaDNS DNS, TabelaLinks links){
     
     else{
 
-        char * buf[SIZE];
+        char buf[SIZE];
+
         for(int i = 0; i < links.nroLinks; i++){
-            int sockfd = &links.conexoes[i].socket ;
+
+            int sockfd = links.conexoes[i].socket ;
             struct sockaddr_storage *storage = links.conexoes[i].storage;
             socklen_t len = sizeof(&storage);
 
-            printf("tentativa porta: %s\n", links.conexoes[i].porta);
-            printf("tentativa de send");
-    
-            int send = sendto(sockfd, hostname, 
-            sizeof(hostname), MSG_CONFIRM,
-            (const struct sockaddr *)&storage,
-            len);
-    
-            if(send < 0){
-                printf("falha no send :( \n");
-            }
-    
-            if(recvfrom(sockfd, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &storage, &len)){
-                printf("Hostname received : %s\n", *buf);
+            printf("send p/ porta: %s\n", links.conexoes[i].porta);
+            sendMessage(sockfd, links.conexoes[i].ip, atoi(links.conexoes[i].porta), hostname);
+            
+            int recv =  recvfrom(sockfd, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &storage, &len);
 
-            }
+            if(recv > 0){
+                printf("Hostname received: %s\n", buf);
+                break;
+            }        
+            
         }
 
         printf("Endereço associado ao host %s não encontrado. \n", hostname);
@@ -135,8 +131,9 @@ void search(char *hostname, TabelaDNS DNS, TabelaLinks links){
 // }
 
 struct ServerLinks novoLink(char* ip, char *porta){
-    ServerLinks novoLink = criarSocket(porta);
+    ServerLinks novoLink = criarSocket(porta, ip);
     memcpy(novoLink.porta, porta, 10);
+    memcpy(novoLink.ip, ip, 33);
 
     return novoLink;
 }

@@ -30,13 +30,13 @@ void printTabelaDNS(TabelaDNS DNS){
 void printTabelaLinks(TabelaLinks links){
     int i=0;
     for (i = 0; i < links.nroLinks; i++){
-        printf("Porta: %s \n", links.conexoes[i].porta);
+        printf("Porta: %s IP: %s \n", links.conexoes[i].porta, links.conexoes[i].ip);
     };
 
 };
 
 
-void chamarComando (char * comando, TabelaDNS *DNS, TabelaLinks *links){
+void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links){
     int j = 0, p = 0;
     char parametros[3][100]; 
     int length = strlen(comando);
@@ -73,7 +73,6 @@ void chamarComando (char * comando, TabelaDNS *DNS, TabelaLinks *links){
     if(comparacao == 0){
         printf("link \n");
         linkServers(parametros[1], parametros[2], links);
-        printTabelaLinks(*links);
         return;
     }
     else{
@@ -101,7 +100,7 @@ int main(int argc, char *argv[]){
 
     ThreadArgs args;
     ThreadArgs *args_addr;
-
+    args.ip = "127.0.0.1";
     args.porta = argv[1];
     args.DNS = DNS;
     args_addr = &args;
@@ -119,27 +118,29 @@ int main(int argc, char *argv[]){
         else{
             while(fgets(linha, 1024, file)) {
                 linha[strcspn(linha, "\n")] = 0;
-                chamarComando(linha, &DNS, &links);
-                printTabelaDNS(DNS);
+                chamarOperacao(linha, &DNS, &links);
                 printf("\n");
             }       
 
         }
     }
+    
+    printTabelaDNS(DNS);
+    printTabelaLinks(links);
 
     while(1){
         printf("\nComando> ");
 	    char comando[50];
 	    if(fgets(comando, 50, stdin)){
             comando[strcspn(comando, "\n")] = 0;
-            chamarComando(comando, &DNS, &links);
-            printTabelaDNS(DNS);
+            chamarOperacao(comando, &DNS, &links);
             printf("\n");
 
         }      
         
     }
     
+
     
     return 1;
 };
