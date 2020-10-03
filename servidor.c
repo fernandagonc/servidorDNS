@@ -138,9 +138,7 @@ int criarSocket(char * porta, char * ip){
     }
     char str[SIZE];
     printAddr(addr,  str,  SIZE);
-    printf("Addr: %s\n", str);
-
-
-    printf("Socket para comunicação criado com sucesso. \n");
+  
+    printf("Socket para comunicação criado com sucesso no endereço: %s\n", str);
     return sockfd;
 }

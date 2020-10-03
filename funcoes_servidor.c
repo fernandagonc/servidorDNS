@@ -104,16 +104,8 @@ void search(char *hostname, TabelaDNS DNS, TabelaLinks links, int * socket){
 
         for(int i = 0; i < links.nroLinks; i++){
         
-            //const struct sockaddr *address = (const struct sockaddr*) &links.conexoes[i].storage;
-            int socket = links.conexoes[i].sock;
-
-        
+            int socket = links.conexoes[i].sock;    
             struct sockaddr_storage address = links.conexoes[i].storage;
-            // memset(&address, 0, sizeof(address)); 
-
-            // if (0 != addrParse(links.conexoes[i].ip, atoi(links.conexoes[i].porta), &address)) {
-            //     exit(1);
-            // }
 
             char str[SIZE];
             socklen_t len = sizeof(&address);
@@ -171,13 +163,17 @@ struct ServerLinks novoLink(char* ip, char *porta){
         printf("\n Erro : Não foi possível criar o socket \n");
         exit(EXIT_FAILURE); 
     } 
+
     novoLink.sock = sock;
     memcpy(novoLink.porta, porta, 10);
     memcpy(novoLink.ip, ip, 33);
 
     if (0 != addrParse(novoLink.ip, atoi(novoLink.porta), &novoLink.storage)) {
-        exit(1);
+        printf("Link inválido. \n");
+        novoLink.sock = -1;
+        return novoLink;
     }
+
     char str[SIZE];
     printAddr((const struct sockaddr *)&novoLink.storage, str, SIZE);
     printf("Addr do novo link: %s\n", str);
@@ -186,8 +182,13 @@ struct ServerLinks novoLink(char* ip, char *porta){
 }
 
 void linkServers(char* ip, char *porta, TabelaLinks * links){
+    ServerLinks link = novoLink(ip, porta);
+    
+    if (link.sock == -1){
+        return;
+    }
 
-    links->conexoes[links->nroLinks] = novoLink(ip, porta);
+    links->conexoes[links->nroLinks] = link;
     links->nroLinks += 1;
     
     // aumentar tamanho da tabela para próxima inserção

@@ -33,8 +33,6 @@ void *connectionHandler(void *argPointer) {
     int sockfd = criarSocket(port, ip);
     args->socket = sockfd;
 
-    
-
     printf("Open to recv \n");
     char *host;  
     while(1){
@@ -47,7 +45,7 @@ void *connectionHandler(void *argPointer) {
         
         if(count > 0){
             if(charToInt(buf[0]) == 1){
-                printf("Requisição recebida para encontrar host: %s \n", buf);
+
                 host = buf; 
                 int i = 1;
                 int length = strlen(buf);
@@ -56,7 +54,7 @@ void *connectionHandler(void *argPointer) {
                     host[i-1] = buf[i];
                 }
                 host[i-1] = '\0';
-                printf("Search para o host: %s localmente\n", host);
+
                 char *IP;
                 IP = malloc(33);
                 memset(IP, 0, 33);
@@ -67,7 +65,7 @@ void *connectionHandler(void *argPointer) {
                 resposta[0] = '2';
              
                 IP = searchLocal(host, *args->DNS);
-                printf("Resultado search local: %s \n", IP);
+
                 if(IP == 0){
                     char * notIP;
                     notIP = malloc(3);
@@ -81,7 +79,6 @@ void *connectionHandler(void *argPointer) {
 
 
                 }else{
-
                     strcat(resposta, IP);
                 }
                 
@@ -90,7 +87,6 @@ void *connectionHandler(void *argPointer) {
                     perror("Erro no send ");
                 }
                 else{
-                    printf("Resposta: %s enviada com sucesso!\n", resposta);
                     send = 0;
                     count = 0;
                     memset(buf, 0, SIZE);
