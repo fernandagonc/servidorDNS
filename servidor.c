@@ -7,8 +7,67 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "funcoes_servidor.h"
+#include "common.h"
 #define PROTOCOLO "v4"
 #define SIZE 1024
+
+void printAddr(const struct sockaddr *addr, char *str, size_t strsize) {
+    int version;
+    char addrstr[INET6_ADDRSTRLEN + 1] = "";
+    uint16_t port;
+
+    if (addr->sa_family == AF_INET) {
+        version = 4;
+        struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
+        if (!inet_ntop(AF_INET, &(addr4->sin_addr), addrstr,
+                       INET6_ADDRSTRLEN + 1)) {
+            printf("ntop");
+        }
+        port = ntohs(addr4->sin_port); // network to host short
+    } else if (addr->sa_family == AF_INET6) {
+        version = 6;
+        struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
+        if (!inet_ntop(AF_INET6, &(addr6->sin6_addr), addrstr,
+                       INET6_ADDRSTRLEN + 1)) {
+            printf("ntop");
+        }
+        port = ntohs(addr6->sin6_port); // network to host short
+    } else {
+        printf("unknown protocol family.");
+    }
+    if (str) {
+        snprintf(str, strsize, "IPv%d %s %hu", version, addrstr, port);
+    }
+}
+
+
+int addrParse(const char *addrstr, int port, struct sockaddr_storage *storage) {
+    if (addrstr == NULL) {
+        return -1;
+    }
+
+    uint16_t porta = htons(port);
+
+    struct in_addr inaddr4;
+    if (inet_pton(AF_INET, addrstr, &inaddr4)) {
+        struct sockaddr_in *addr4 = (struct sockaddr_in *)storage;
+        addr4->sin_family = AF_INET;
+        addr4->sin_port = porta;
+        addr4->sin_addr = inaddr4;
+        return 0;
+    }
+
+    struct in6_addr inaddr6;
+    if (inet_pton(AF_INET6, addrstr, &inaddr6)) {
+        struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)storage;
+        addr6->sin6_family = AF_INET6;
+        addr6->sin6_port = porta;
+        memcpy(&(addr6->sin6_addr), &inaddr6, sizeof(inaddr6));
+        return 0;
+    }
+
+    return -1;
+}
 
 int inicializarSocketAddr(const char *proto, const char *portstr, struct sockaddr_storage *storage, char * ip) {
    
@@ -38,8 +97,7 @@ int inicializarSocketAddr(const char *proto, const char *portstr, struct sockadd
     }
 };
 
-ServerLinks criarSocket(char * porta, char * ip){
-    ServerLinks conexao;
+int criarSocket(char * porta, char * ip){
     struct sockaddr_storage storage;
     if (0 != inicializarSocketAddr(PROTOCOLO, porta, &storage, ip)) {
         exit(1);
@@ -66,17 +124,25 @@ ServerLinks criarSocket(char * porta, char * ip){
         exit(1);
     }
 
+    struct timeval timeout={2,0}; //set timeout for 2 seconds
+
+    if (0 != setsockopt(sockfd,SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(struct timeval))) {
+        printf("Erro na função setsockopt");
+        exit(1);
+    }
+
     struct sockaddr *addr = (struct sockaddr *)(&storage);
     if (0 != bind(sockfd, addr, sizeof(storage))) {
         printf("Erro no bind");
         exit(1);
     }
-    
-    conexao.socket = sockfd;
-    conexao.storage = &storage;
+    char str[SIZE];
+    printAddr(addr,  str,  SIZE);
+    printf("Addr: %s\n", str);
+
 
     printf("Socket para comunicação criado com sucesso. \n");
-    return conexao;
+    return sockfd;
 }
 
 void sendMessage(int socket, char * ip, int port, char* message) {
@@ -89,13 +155,9 @@ void sendMessage(int socket, char * ip, int port, char* message) {
     address.sin_family = AF_INET; 
     address.sin_port = htons(port); 
     address.sin_addr = inaddr4;
-    char * requisicao;
-    requisicao = malloc(SIZE);
-    memset(requisicao, 0, SIZE);
-    requisicao[0] = '1';
-    strcat(requisicao, message);
+    
 
-    int send = sendto(socket, (const char *)requisicao, strlen(requisicao), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
+    int send = sendto(socket, (const char *)message, strlen(message), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
     if(send < 0){
         perror("Erro no send: ");
     }

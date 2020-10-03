@@ -21,7 +21,7 @@ void usage() {
 
 
 
-void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links){
+void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links, int * socket){
     int j = 0, p = 0;
     char parametros[3][100]; 
     int length = strlen(comando);
@@ -49,7 +49,7 @@ void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links){
     comparacao = strcmp(parametros[0], "search");
     if(comparacao == 0){
         printf("search %s \n", parametros[1]);
-        search(parametros[1], *DNS, *links);
+        search(parametros[1], *DNS, *links, socket);
 
         return;
     }
@@ -85,9 +85,9 @@ int main(int argc, char *argv[]){
 
     ThreadArgs args;
     ThreadArgs *args_addr;
-    args.ip = "127.0.0.1";
+    args.ip = "0.0.0.0";
     args.porta = argv[1];
-    args.DNS = DNS;
+    args.DNS = &DNS;
     args_addr = &args;
     criarThread(args_addr);
     sleep(1);
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]){
         else{
             while(fgets(linha, 1024, file)) {
                 linha[strcspn(linha, "\n")] = 0;
-                chamarOperacao(linha, &DNS, &links);
+                chamarOperacao(linha, &DNS, &links, &args.socket);
                 printf("\n");
             }       
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]){
 	    char comando[50];
 	    if(fgets(comando, 50, stdin)){
             comando[strcspn(comando, "\n")] = 0;
-            chamarOperacao(comando, &DNS, &links);
+            chamarOperacao(comando, &DNS, &links,&args.socket);
             printf("\n");
 
         }      

@@ -30,33 +30,23 @@ void *connectionHandler(void *argPointer) {
     ThreadArgs *args = argPointer;
     char* port = args->porta; 
     char* ip = args->ip;
-    
+    int sockfd = criarSocket(port, ip);
+    args->socket = sockfd;
 
-    ServerLinks serverSocket = criarSocket(port, ip);
-    int sockfd = serverSocket.socket ;
-    struct sockaddr_storage *client_storage = serverSocket.storage;
-    socklen_t client_len = sizeof(*client_storage);
-    
-    struct sockaddr_in address; 
+    struct sockaddr_storage address; 
     memset(&address, 0, sizeof(address)); 
+    socklen_t client_len = sizeof(address);
 
-    struct in_addr inaddr4;
-    inet_pton(AF_INET, ip, &inaddr4);
-
-    address.sin_family = AF_INET; 
-    address.sin_port = htons(atoi(port)); 
-    address.sin_addr = inaddr4;
-
-    printf("Porta da thread: %s ", args->porta);
     printf("Open to recv \n");
+    char *host;  
     while(1){
-        int count = recvfrom(sockfd, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &client_storage, &client_len);
+        int count = recvfrom(sockfd, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &address, &client_len);
         buf[count] = '\0'; 
-
+        
         if(count > 0){
-            printf("received: %s \n", buf);
             if(charToInt(buf[0]) == 1){
-                char *host = buf; 
+                printf("Requisição recebida para encontrar host: %s \n", buf);
+                host = buf; 
                 int i = 1;
                 int length = strlen(buf);
 
@@ -64,7 +54,7 @@ void *connectionHandler(void *argPointer) {
                     host[i-1] = buf[i];
                 }
                 host[i-1] = '\0';
-                printf("search host: %s \n", host);
+                printf("Search para o host: %s localmente\n", host);
                 char *IP;
                 IP = malloc(33);
                 memset(IP, 0, 33);
@@ -74,26 +64,55 @@ void *connectionHandler(void *argPointer) {
                 memset(resposta, 0, 100);
                 resposta[0] = '2';
              
-                IP = searchLocal(host, args->DNS);
-                printf("ip: %s \n", IP);
+                IP = searchLocal(host, *args->DNS);
+                printf("Resultado search local: %s \n", IP);
                 if(IP == 0){
-                    IP = "-1";
+                    char * notIP;
+                    notIP = malloc(3);
+                    memset(notIP, 0, 3);
+
+                    notIP[0] = '-';
+                    notIP[1] = '1';
+                    strcat(resposta, notIP);
+
+
+                }else{
+
+                    strcat(resposta, IP);
                 }
-                printf("IP: %s \n", IP);
-                strcat(resposta, IP);
-
-
-                int send = sendto(sockfd, resposta, sizeof(resposta), 0, (const struct sockaddr *)&client_storage, client_len);
+                
+                int send = sendto(sockfd, (const char *)resposta, strlen(resposta), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
                 if(send < 0){
-                    perror("Erro no send: ");
+                    perror("Erro no send ");
                 }
                 else{
                     printf("Resposta: %s enviada com sucesso!\n", resposta);
                     send = 0;
                     count = 0;
                     memset(buf, 0, SIZE);
-                    //resposta = "";
+                    resposta = "";
                 }
+                
+            }
+            else if(charToInt(buf[0]) == 2){
+                char *resposta = buf; 
+                int i = 1;
+                int length = strlen(buf);
+
+                for( i = 1; i < length; i++){
+                    resposta[i-1] = buf[i];
+                }
+                resposta[i-1] = '\0';
+
+                if(resposta[0] == '-' && resposta[1] == '1'){
+                    printf("Endereço associado ao host %s não encontrado neste servidor \n", host);
+
+                }
+                else{
+                    printf("IP associado: %s\n", resposta);
+                }
+              
+
             }
        
             
@@ -105,28 +124,3 @@ void *connectionHandler(void *argPointer) {
    
     return 0;
 }
-
-// void * receberRequisicoes(void * argPointer){
-//     char buf[SIZE];
-//     ThreadArgs *args = argPointer;
-//     int count = recv(args->socket, buf, SIZE, 0);
-//     if(count > 0){
-//         char *requisicao;
-//         memmove(requisicao, buf+1, strlen (buf+1) + 1);
-//         printf("buf: %s, requisicao: %s", buf, requisicao);
-//         char *IP = (char *)searchLocal(requisicao, args->DNS);
-//         char *resposta = "2";
-
-//         if(IP != 0){
-//             strcat(resposta, IP);
-//         }
-//         else{
-//             strcat(resposta, "-1");
-//         }
-//         send(socket, resposta, sizeof(resposta), 0);
-//     }
-
-//     printf("entrei na requisicao");
-//     free(args);
-//     return;
-// };
