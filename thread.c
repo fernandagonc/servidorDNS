@@ -33,13 +33,15 @@ void *connectionHandler(void *argPointer) {
     int sockfd = criarSocket(port, ip);
     args->socket = sockfd;
 
-    struct sockaddr_storage address; 
-    memset(&address, 0, sizeof(address)); 
-    socklen_t client_len = sizeof(address);
+    
 
     printf("Open to recv \n");
     char *host;  
     while(1){
+        struct sockaddr_storage address; 
+        memset(&address, 0, sizeof(address)); 
+        socklen_t client_len = sizeof(address);
+
         int count = recvfrom(sockfd, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &address, &client_len);
         buf[count] = '\0'; 
         
@@ -73,6 +75,8 @@ void *connectionHandler(void *argPointer) {
 
                     notIP[0] = '-';
                     notIP[1] = '1';
+                    notIP[2] = '\0';
+
                     strcat(resposta, notIP);
 
 
@@ -93,26 +97,6 @@ void *connectionHandler(void *argPointer) {
                     resposta = "";
                 }
                 
-            }
-            else if(charToInt(buf[0]) == 2){
-                char *resposta = buf; 
-                int i = 1;
-                int length = strlen(buf);
-
-                for( i = 1; i < length; i++){
-                    resposta[i-1] = buf[i];
-                }
-                resposta[i-1] = '\0';
-
-                if(resposta[0] == '-' && resposta[1] == '1'){
-                    printf("Endereço associado ao host %s não encontrado neste servidor \n", host);
-
-                }
-                else{
-                    printf("IP associado: %s\n", resposta);
-                }
-              
-
             }
        
             

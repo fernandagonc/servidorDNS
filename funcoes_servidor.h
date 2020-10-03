@@ -14,6 +14,8 @@ typedef struct TabelaDNS {
 typedef struct ServerLinks {
     char porta[10];
     char ip[33];
+    struct sockaddr_storage storage;
+    int sock;
 } ServerLinks;
 
 typedef struct TabelaLinks {
@@ -47,9 +49,6 @@ struct ServerLinks novoLink(char* ip, char *porta);
 
 void linkServers(char* ip, char *porta, TabelaLinks *links);
 
-void resposta(int sockfd, TabelaDNS DNS);
-
-void requisicao(int sockfd, char * hostname);
 
 
 #endif

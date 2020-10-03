@@ -144,36 +144,3 @@ int criarSocket(char * porta, char * ip){
     printf("Socket para comunicação criado com sucesso. \n");
     return sockfd;
 }
-
-void sendMessage(int socket, char * ip, int port, char* message) {
-    struct sockaddr_in address; 
-    memset(&address, 0, sizeof(address)); 
-
-    struct in_addr inaddr4;
-    inet_pton(AF_INET, ip, &inaddr4);
-
-    address.sin_family = AF_INET; 
-    address.sin_port = htons(port); 
-    address.sin_addr = inaddr4;
-    
-
-    int send = sendto(socket, (const char *)message, strlen(message), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
-    if(send < 0){
-        perror("Erro no send: ");
-    }
-    else{
-        printf("Enviada com sucesso!\n");
-    }
-}
-
-void receiveMessage(int socket, struct sockaddr *address) {
-    char buffer[SIZE]; 
-    struct sockaddr_in cliaddr; 
-    memset(&cliaddr, 0, sizeof(cliaddr)); 
-    socklen_t len = sizeof(cliaddr);
-    int n = recvfrom(socket, (char *)buffer, SIZE, MSG_WAITALL, (struct sockaddr *) &cliaddr, &len); 
-    buffer[n] = '\0'; 
-    printf("recvd");
-
-    printf("%s", buffer);
-}

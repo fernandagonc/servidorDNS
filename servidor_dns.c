@@ -41,14 +41,14 @@ void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links, int * s
     int comparacao = strcmp(parametros[0], "add");
 
     if(comparacao == 0){
-        printf("add %s %s\n", parametros[1], parametros[2]);
+        printf("Adding %s %s\n", parametros[1], parametros[2]);
         add(parametros[1], parametros[2], DNS);
         return;
     }
     
     comparacao = strcmp(parametros[0], "search");
     if(comparacao == 0){
-        printf("search %s \n", parametros[1]);
+        printf("Searching for %s \n", parametros[1]);
         search(parametros[1], *DNS, *links, socket);
 
         return;
@@ -56,7 +56,7 @@ void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links, int * s
     
     comparacao = strcmp(parametros[0], "link");
     if(comparacao == 0){
-        printf("link \n");
+        printf("Linking to %s %s \n", parametros[1], parametros[2]);
         linkServers(parametros[1], parametros[2], links);
         return;
     }
