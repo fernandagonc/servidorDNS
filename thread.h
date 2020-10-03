@@ -8,8 +8,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "funcoes_servidor.h"
-#include "servidor.h"
+
 #ifndef THREAD
 #define THREAD
 

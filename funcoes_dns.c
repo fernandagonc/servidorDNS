@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "funcoes_servidor.h"
+#include "funcoes_dns.h"
 #include "servidor.h"
 #include "common.h"
 
@@ -85,7 +85,7 @@ char *searchLocal(char *hostname, TabelaDNS DNS){
     return 0;
 }
 
-void search(char *hostname, TabelaDNS DNS, TabelaLinks links, int * socket){
+void search(char *hostname, TabelaDNS DNS, TabelaLinks links){
 
     char * IP = searchLocal(hostname, DNS);
 

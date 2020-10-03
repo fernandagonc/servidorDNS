@@ -1,5 +1,5 @@
 #include "thread.h"
-#include "funcoes_servidor.h"
+#include "funcoes_dns.h"
 #include "servidor.h"
 #include "common.h"
 #include <pthread.h>

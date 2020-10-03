@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "funcoes_servidor.h"
+#include "funcoes_dns.h"
 #include "common.h"
 #define PROTOCOLO "v4"
 #define SIZE 1024

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "funcoes_servidor.h"
+#include "funcoes_dns.h"
 #include "common.h"
 #include "servidor.h"
 #include "thread.h"
@@ -21,7 +21,7 @@ void usage() {
 
 
 
-void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links, int * socket){
+void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links){
     int j = 0, p = 0;
     char parametros[3][100]; 
     int length = strlen(comando);
@@ -49,7 +49,7 @@ void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links, int * s
     comparacao = strcmp(parametros[0], "search");
     if(comparacao == 0){
         printf("Searching for %s \n", parametros[1]);
-        search(parametros[1], *DNS, *links, socket);
+        search(parametros[1], *DNS, *links);
 
         return;
     }
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]){
         else{
             while(fgets(linha, 1024, file)) {
                 linha[strcspn(linha, "\n")] = 0;
-                chamarOperacao(linha, &DNS, &links, &args.socket);
+                chamarOperacao(linha, &DNS, &links);
                 printf("\n");
             }       
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]){
 	    char comando[50];
 	    if(fgets(comando, 50, stdin)){
             comando[strcspn(comando, "\n")] = 0;
-            chamarOperacao(comando, &DNS, &links,&args.socket);
+            chamarOperacao(comando, &DNS, &links);
             printf("\n");
 
         }      

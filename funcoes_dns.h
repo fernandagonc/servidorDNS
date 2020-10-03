@@ -43,7 +43,7 @@ int posicaoHostNaTabela(char *hostname, TabelaDNS DNS);
 
 char * searchLocal(char *hostname, TabelaDNS DNS);
 
-void search(char *hostname, TabelaDNS DNS, TabelaLinks links, int * socket);
+void search(char *hostname, TabelaDNS DNS, TabelaLinks links);
 
 struct ServerLinks novoLink(char* ip, char *porta);
 
