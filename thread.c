@@ -64,7 +64,7 @@ void *connectionHandler(void *argPointer) {
                 memset(resposta, 0, 100);
                 resposta[0] = '2';
              
-                IP = searchLocal(host, *args->DNS);
+                IP = search(host, *args->DNS, *args->links);
 
                 if(IP == 0){
                     char * notIP;

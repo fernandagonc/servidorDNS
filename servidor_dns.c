@@ -88,6 +88,7 @@ int main(int argc, char *argv[]){
     args.ip = "0.0.0.0";
     args.porta = argv[1];
     args.DNS = &DNS;
+    args.links = &links;
     args_addr = &args;
     criarThread(args_addr);
     sleep(1);

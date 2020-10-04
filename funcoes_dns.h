@@ -27,7 +27,7 @@ typedef struct ThreadArgs{
     char * porta;
     char * ip;
     TabelaDNS * DNS;
-    TabelaLinks links;
+    TabelaLinks * links;
     int socket;
 } ThreadArgs;
 
@@ -43,7 +43,7 @@ int posicaoHostNaTabela(char *hostname, TabelaDNS DNS);
 
 char * searchLocal(char *hostname, TabelaDNS DNS);
 
-void search(char *hostname, TabelaDNS DNS, TabelaLinks links);
+char * search(char *hostname, TabelaDNS DNS, TabelaLinks links);
 
 struct ServerLinks novoLink(char* ip, char *porta);
 

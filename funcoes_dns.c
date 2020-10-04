@@ -78,80 +78,86 @@ char *searchLocal(char *hostname, TabelaDNS DNS){
     int posicao = posicaoHostNaTabela(hostname, DNS);
 
     if(posicao >= 0){
-        printf("Endereço associado ao host %s: %s \n", DNS.entradas[posicao].hostname, DNS.entradas[posicao].enderecoIP);
         return DNS.entradas[posicao].enderecoIP;
     }
 
     return 0;
 }
 
-void search(char *hostname, TabelaDNS DNS, TabelaLinks links){
+char * search(char *hostname, TabelaDNS DNS, TabelaLinks links){
 
     char * IP = searchLocal(hostname, DNS);
 
     if(IP != 0){
-        return;
+        return IP;
     }
-    
-    else{
 
-        char buf[SIZE];
-        char * requisicao;
-        requisicao = malloc(SIZE);
-        memset(requisicao, 0, SIZE);
-        requisicao[0] = '1';
-        strcat(requisicao, hostname);
+    char buf[SIZE];
+    char * requisicao;
+    requisicao = malloc(SIZE);
+    memset(requisicao, 0, SIZE);
+    requisicao[0] = '1';
+    strcat(requisicao, hostname);
+    int hostEncontrado = 0;
+    char *resposta;
 
-        for(int i = 0; i < links.nroLinks; i++){
-        
-            int socket = links.conexoes[i].sock;    
-            struct sockaddr_storage address = links.conexoes[i].storage;
+    for(int i = 0; i < links.nroLinks ; i++){
 
-            char str[SIZE];
-            socklen_t len = sizeof(&address);
-            printAddr((const struct sockaddr *)&address, str, SIZE);
-            printf("Send to Addr: %s \n", str);
-            int send = sendto(socket, (const char *)requisicao, strlen(requisicao), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
-            if(send < 0){
-                perror("Erro no send: ");
+        int socket = links.conexoes[i].sock;    
+        struct sockaddr_storage address = links.conexoes[i].storage;
+
+        char str[SIZE];
+        socklen_t len = sizeof(&address);
+        printAddr((const struct sockaddr *)&address, str, SIZE);
+        printf("Send to Addr: %s \n", str);
+        int send = sendto(socket, (const char *)requisicao, strlen(requisicao), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
+        if(send < 0){
+            perror("Erro no send: ");
+        }
+        else{
+            printf("Enviada com sucesso!\n");
+        }
+
+        struct sockaddr_storage storage;
+        memset(&storage, 0, sizeof(storage));  
+        len = sizeof(&storage);
+
+        memset(buf, 0, SIZE);
+        recvfrom(socket, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &storage, &len);
+
+        if(charToInt(buf[0]) == 2){
+            resposta = buf; 
+            int i = 1;
+            int length = strlen(buf);
+
+            for( i = 1; i < length; i++){
+                resposta[i-1] = buf[i];
+            }
+            resposta[i-1] = '\0';
+
+            if(resposta[0] == '-' && resposta[1] == '1'){
+                // printf("Endereço associado ao host não encontrado neste servidor \n");
+                // return 0;
+                continue;
+
             }
             else{
-                printf("Enviada com sucesso!\n");
+                hostEncontrado = 1;
             }
+            
+        }        
 
-            struct sockaddr_storage storage;
-            memset(&storage, 0, sizeof(storage));  
-            len = sizeof(&storage);
-
-            memset(buf, 0, SIZE);
-            int recv =  recvfrom(socket, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &storage, &len);
-
-            if(recv > 0){
-
-                if(charToInt(buf[0]) == 2){
-                    char *resposta = buf; 
-                    int i = 1;
-                    int length = strlen(buf);
-
-                    for( i = 1; i < length; i++){
-                        resposta[i-1] = buf[i];
-                    }
-                    resposta[i-1] = '\0';
-
-                    if(resposta[0] == '-' && resposta[1] == '1'){
-                        printf("Endereço associado ao host não encontrado neste servidor \n");
-                    }
-                    else{
-                        printf("IP associado: %s\n", resposta);
-                    }
-                    
-                }        
-
-            }
-        }
+        
     }
 
-    return;
+    if (hostEncontrado == 1) {
+        printf("IP associado: %s \n", resposta);;
+        return resposta;
+    } else {
+        printf("Endereço associado ao host não encontrado \n");
+        return 0;
+    }
+
 
 };
 
