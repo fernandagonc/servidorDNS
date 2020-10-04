@@ -85,10 +85,14 @@ char *searchLocal(char *hostname, TabelaDNS DNS){
 
 char * search(char *hostname, TabelaDNS DNS, TabelaLinks links){
 
+    int hostEncontrado = 0;
+    int localmente = 0;
     char * IP = searchLocal(hostname, DNS);
 
     if(IP != 0){
-        return IP;
+        hostEncontrado = 1;
+        localmente = 1;
+
     }
 
     char buf[SIZE];
@@ -97,58 +101,62 @@ char * search(char *hostname, TabelaDNS DNS, TabelaLinks links){
     memset(requisicao, 0, SIZE);
     requisicao[0] = '1';
     strcat(requisicao, hostname);
-    int hostEncontrado = 0;
     char *resposta;
 
-    for(int i = 0; i < links.nroLinks ; i++){
+    for(int i = 0; i < links.nroLinks; i++){
+        if(hostEncontrado != 1){
+            int socket = links.conexoes[i].sock;    
+            struct sockaddr_storage address = links.conexoes[i].storage;
 
-        int socket = links.conexoes[i].sock;    
-        struct sockaddr_storage address = links.conexoes[i].storage;
+            char str[SIZE];
+            socklen_t len = sizeof(&address);
+            printAddr((const struct sockaddr *)&address, str, SIZE);
+            printf("Send to Addr: %s \n", str);
+            int send = sendto(socket, (const char *)requisicao, strlen(requisicao), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
+            if(send < 0){
+                perror("Erro no send: ");
+            }
 
-        char str[SIZE];
-        socklen_t len = sizeof(&address);
-        printAddr((const struct sockaddr *)&address, str, SIZE);
-        printf("Send to Addr: %s \n", str);
-        int send = sendto(socket, (const char *)requisicao, strlen(requisicao), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
-        if(send < 0){
-            perror("Erro no send: ");
+            struct sockaddr_storage storage;
+            memset(&storage, 0, sizeof(storage));  
+            len = sizeof(&storage);
+
+            memset(buf, 0, SIZE);
+            recvfrom(socket, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &storage, &len);
+
+            if(charToInt(buf[0]) == 2){
+                resposta = buf; 
+                int i = 1;
+                int length = strlen(buf);
+
+                for( i = 1; i < length; i++){
+                    resposta[i-1] = buf[i];
+                }
+                resposta[i-1] = '\0';
+
+                if(resposta[0] == '-' && resposta[1] == '1'){
+                    continue;
+
+                }
+                else{
+                    hostEncontrado = 1;
+                }
+                
+            }        
+
         }
-
-        struct sockaddr_storage storage;
-        memset(&storage, 0, sizeof(storage));  
-        len = sizeof(&storage);
-
-        memset(buf, 0, SIZE);
-        recvfrom(socket, (char *)buf, SIZE, MSG_WAITALL,(struct sockaddr *) &storage, &len);
-
-        if(charToInt(buf[0]) == 2){
-            resposta = buf; 
-            int i = 1;
-            int length = strlen(buf);
-
-            for( i = 1; i < length; i++){
-                resposta[i-1] = buf[i];
-            }
-            resposta[i-1] = '\0';
-
-            if(resposta[0] == '-' && resposta[1] == '1'){
-                continue;
-
-            }
-            else{
-                hostEncontrado = 1;
-            }
-            
-        }        
-
+        
         
     }
 
     if (hostEncontrado == 1) {
-        printf("IP associado: %s \n", resposta);;
+        if(localmente == 1){
+             return IP;
+        } 
+        // printf("IP associado: %s \n", resposta);
         return resposta;
     } else {
-        printf("Endereço associado ao host não encontrado \n");
+        // printf("Endereço associado ao host não encontrado \n");
         return 0;
     }
 

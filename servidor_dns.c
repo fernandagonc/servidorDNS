@@ -48,7 +48,13 @@ void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links){
     comparacao = strcmp(parametros[0], "search");
     if(comparacao == 0){
         printf("Searching for %s \n", parametros[1]);
-        search(parametros[1], *DNS, *links);
+        char * IP =  search(parametros[1], *DNS, *links);
+        if(IP != 0){
+            printf("IP associado: %s \n", IP);
+        }
+        else{
+            printf("IP associado não encontrado.");
+        }      
 
         return;
     }

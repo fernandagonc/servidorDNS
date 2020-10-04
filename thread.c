@@ -9,8 +9,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
-#define PROTOCOLO "v4"
 #define SIZE 1024
 
 void criarThread(void * argPointer) {
@@ -29,6 +27,7 @@ void *connectionHandler(void *argPointer) {
     ThreadArgs *args = argPointer;
     char* port = args->porta; 
     char* ip = args->ip;
+
     int sockfd = criarSocket(port, ip);
     args->socket = sockfd;
 
@@ -83,6 +82,7 @@ void *connectionHandler(void *argPointer) {
                 int send = sendto(sockfd, (const char *)resposta, strlen(resposta), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
                 if(send < 0){
                     perror("Erro no send ");
+                    exit(1);
                 }
                 else{
                     send = 0;

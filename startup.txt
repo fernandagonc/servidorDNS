@@ -1,10 +1,4 @@
-add host1 192.240.168.1
-add host2 192.255.168.0
-add host3 192.255.0.0
-search host3
-add host3 155.155.0.0 
-add host4 111.111.111.111
-search host3
-link 192.168.1.1 64738
-link 192.168.3.1 45362
-link 192.168.0.0 53402
+add google 1.2.3.4
+add yahoo 4.3.2.1
+link 0.0.0.0 8081
+link 0.0.0.0 8083
