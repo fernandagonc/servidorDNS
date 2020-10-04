@@ -107,11 +107,8 @@ char * search(char *hostname, TabelaDNS DNS, TabelaLinks links){
         if(hostEncontrado != 1){
             int socket = links.conexoes[i].sock;    
             struct sockaddr_storage address = links.conexoes[i].storage;
-
-            char str[SIZE];
             socklen_t len = sizeof(&address);
-            printAddr((const struct sockaddr *)&address, str, SIZE);
-            printf("Send to Addr: %s \n", str);
+            
             int send = sendto(socket, (const char *)requisicao, strlen(requisicao), MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address)); 
             if(send < 0){
                 perror("Erro no send: ");
@@ -145,6 +142,9 @@ char * search(char *hostname, TabelaDNS DNS, TabelaLinks links){
             }        
 
         }
+        else{
+            break;
+        }
         
         
     }
@@ -153,10 +153,8 @@ char * search(char *hostname, TabelaDNS DNS, TabelaLinks links){
         if(localmente == 1){
              return IP;
         } 
-        // printf("IP associado: %s \n", resposta);
         return resposta;
     } else {
-        // printf("Endereço associado ao host não encontrado \n");
         return 0;
     }
 
@@ -184,7 +182,7 @@ struct ServerLinks novoLink(char* ip, char *porta){
 
     char str[SIZE];
     printAddr((const struct sockaddr *)&novoLink.storage, str, SIZE);
-    printf("Addr do novo link: %s\n", str);
+    printf("Linked to: %s\n", str);
 
     return novoLink;
 }

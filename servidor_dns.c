@@ -61,7 +61,6 @@ void chamarOperacao (char * comando, TabelaDNS *DNS, TabelaLinks *links){
     
     comparacao = strcmp(parametros[0], "link");
     if(comparacao == 0){
-        printf("Linking to %s %s \n", parametros[1], parametros[2]);
         linkServers(parametros[1], parametros[2], links);
         return;
     }
