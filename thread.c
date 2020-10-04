@@ -1,7 +1,6 @@
 #include "thread.h"
 #include "funcoes_dns.h"
 #include "servidor.h"
-#include "common.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +32,6 @@ void *connectionHandler(void *argPointer) {
     int sockfd = criarSocket(port, ip);
     args->socket = sockfd;
 
-    printf("Open to recv \n");
     char *host;  
     while(1){
         struct sockaddr_storage address; 

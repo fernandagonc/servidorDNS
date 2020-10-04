@@ -7,7 +7,6 @@
 #include <sys/types.h>
 #include "funcoes_dns.h"
 #include "servidor.h"
-#include "common.h"
 
 #define PROTOCOLO "v4"
 #define SIZE 1024
@@ -114,9 +113,6 @@ char * search(char *hostname, TabelaDNS DNS, TabelaLinks links){
         if(send < 0){
             perror("Erro no send: ");
         }
-        else{
-            printf("Enviada com sucesso!\n");
-        }
 
         struct sockaddr_storage storage;
         memset(&storage, 0, sizeof(storage));  
@@ -136,8 +132,6 @@ char * search(char *hostname, TabelaDNS DNS, TabelaLinks links){
             resposta[i-1] = '\0';
 
             if(resposta[0] == '-' && resposta[1] == '1'){
-                // printf("Endereço associado ao host não encontrado neste servidor \n");
-                // return 0;
                 continue;
 
             }

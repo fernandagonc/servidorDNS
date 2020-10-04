@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "funcoes_dns.h"
-#include "common.h"
 #include "servidor.h"
 #include "thread.h"
 #include <unistd.h>
@@ -110,9 +109,6 @@ int main(int argc, char *argv[]){
 
         }
     }
-    
-    printTabelaDNS(DNS);
-    printTabelaLinks(links);
 
     while(1){
         printf("\nComando> ");
