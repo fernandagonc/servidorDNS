@@ -165,12 +165,7 @@ struct ServerLinks novoLink(char* ip, char *porta){
     ServerLinks novoLink;
 
     int sock;
-    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
-        printf("\n Erro : Não foi possível criar o socket \n");
-        exit(EXIT_FAILURE); 
-    } 
 
-    novoLink.sock = sock;
     memcpy(novoLink.porta, porta, 10);
     memcpy(novoLink.ip, ip, 33);
 
@@ -179,6 +174,11 @@ struct ServerLinks novoLink(char* ip, char *porta){
         novoLink.sock = -1;
         return novoLink;
     }
+    if ((sock = socket(novoLink.storage.ss_family, SOCK_DGRAM, 0)) < 0) { 
+        printf("\n Erro : Não foi possível criar o socket \n");
+        exit(EXIT_FAILURE); 
+    } 
+    novoLink.sock = sock;
 
     char str[SIZE];
     printAddr((const struct sockaddr *)&novoLink.storage, str, SIZE);
